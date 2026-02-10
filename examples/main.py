@@ -3,7 +3,7 @@
 Главный модуль для демонстрации работы
 """
 
-from bibtex_to_dstu import BibTeXToDSTUConverter
+from bibliographycite import BibTeXToDSTUConverter
 
 
 def main():
@@ -125,7 +125,7 @@ def main():
     print("-" * 80)
     print("""
 1. Імпортуйте конвертер:
-   from bibtex_to_dstu import BibTeXToDSTUConverter
+   from bibliographycite import BibTeXToDSTUConverter
 
 2. Створіть екземпляр:
    converter = BibTeXToDSTUConverter()

@@ -33,7 +33,7 @@
 """
 
 import unittest
-from bibtex_to_dstu import BibTeXToDSTUConverter
+from bibliographycite import BibTeXToDSTUConverter
 
 
 class TestDSTU_D1_1_SingleAuthor(unittest.TestCase):
