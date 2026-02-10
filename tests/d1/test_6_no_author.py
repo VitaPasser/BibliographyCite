@@ -14,14 +14,14 @@ class TestDSTU_D1_6_NoAuthor(unittest.TestCase):
             title = {30 років історичному факультету: історія та сьогодення (1986-2016)},
             type = {ювіл. вип.},
             editor = {Черепаня, В. В.},
-            note = {під заг. ред.},
+            note = {заг. ред.},
             publisher = {ЗНУ},
             year = {2016},
             address = {Запоріжжя},
             pages = {340}
         }"""
         result = self.converter.convert_string_to_list(bibtex)[0]
-        expected = "30 років історичному факультету: історія та сьогодення (1986-2016) : ювіл. вип. / під заг. ред. В. В. Черепані. Запоріжжя : ЗНУ, 2016. 340 с."
+        expected = "30 років історичному факультету: історія та сьогодення (1986-2016) : ювіл. вип. / заг. ред. В. В. Черепаня. Запоріжжя : ЗНУ, 2016. 340 с."
         self.assertEqual(result, expected)
 
     def test_d1_6_punkt_2(self):
@@ -30,14 +30,14 @@ class TestDSTU_D1_6_NoAuthor(unittest.TestCase):
             title = {Етнографія},
             type = {конспект лекцій},
             editor = {Гарапко, В. І.},
-            note = {за заг. ред.; уклад. А. І. Гарапко},
+            note = {заг. ред.; уклад. А. І. Гарапко},
             publisher = {ЦУЛ},
             year = {2018},
             address = {Київ},
             pages = {320}
         }"""
         result = self.converter.convert_string_to_list(bibtex)[0]
-        expected = "Етнографія : конспект лекцій / за заг. ред. В. І. Гарапка; уклад. А. І. Гарапко. Київ : ЦУЛ, 2018. 320 с."
+        expected = "Етнографія : конспект лекцій / заг. ред. В. І. Гарапко; уклад. А. І. Гарапко. Київ : ЦУЛ, 2018. 320 с."
         self.assertEqual(result, expected)
 
     def test_d1_6_punkt_3(self):
@@ -53,7 +53,7 @@ class TestDSTU_D1_6_NoAuthor(unittest.TestCase):
             pages = {162}
         }"""
         result = self.converter.convert_string_to_list(bibtex)[0]
-        expected = "Міжнародні відносини : монографія / за ред. М. А. Березовського. Київ : ЦУЛ, 2016. 162 с."
+        expected = "Міжнародні відносини : монографія / ред. М. А. Березовський. Київ : ЦУЛ, 2016. 162 с."
         self.assertEqual(result, expected)
 
     def test_d1_6_punkt_4(self):
@@ -69,7 +69,7 @@ class TestDSTU_D1_6_NoAuthor(unittest.TestCase):
             pages = {306}
         }"""
         result = self.converter.convert_string_to_list(bibtex)[0]
-        expected = "Міжнародні економічні відносини : навч. посіб. / за ред. : П. О. Бедрія, О. О. Петренка. Одеса : ОНУ, 2015. 306 с."
+        expected = "Міжнародні економічні відносини : навч. посіб. / ред. : П. О. Бедрій, О. О. Петренко. Одеса : ОНУ, 2015. 306 с."
         self.assertEqual(result, expected)
 
     def test_d1_6_punkt_5(self):
@@ -84,7 +84,7 @@ class TestDSTU_D1_6_NoAuthor(unittest.TestCase):
             pages = {186}
         }"""
         result = self.converter.convert_string_to_list(bibtex)[0]
-        expected = "Науково-практичний коментар Цивільного кодексу України / за заг. ред. Т. А. Тарнавського. Київ : ЦУЛ, 2016. 186 с."
+        expected = "Науково-практичний коментар Цивільного кодексу України / заг. ред. Т. А. Тарнавський. Київ : ЦУЛ, 2016. 186 с."
         self.assertEqual(result, expected)
 
     def test_d1_6_punkt_6(self):

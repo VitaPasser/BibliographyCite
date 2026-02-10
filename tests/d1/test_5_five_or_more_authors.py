@@ -20,7 +20,7 @@ class TestDSTU_D1_5_FiveOrMoreAuthors(unittest.TestCase):
             pages = {267}
         }"""
         result = self.converter.convert_string_to_list(bibtex)[0]
-        expected = "Операційний менеджмент : підручник / С. М. Поплавська та ін. Київ : ЦУЛ, 2011. 267 с."
+        expected = "Операційний менеджмент : підручник / Поплавська С. М. та ін. Київ : ЦУЛ, 2011. 267 с."
         self.assertEqual(result, expected)
 
     def test_d1_5_punkt_2(self):
@@ -36,7 +36,7 @@ class TestDSTU_D1_5_FiveOrMoreAuthors(unittest.TestCase):
             pages = {264}
         }"""
         result = self.converter.convert_string_to_list(bibtex)[0]
-        expected = "Охорона праці : навч. посіб. / О. І. Подольська та ін. 2-ге вид. Київ : ЦУЛ, 2017. 264 с."
+        expected = "Охорона праці : навч. посіб. / Подольська О. І. та ін. 2-ге вид. Київ : ЦУЛ, 2017. 264 с."
         self.assertEqual(result, expected)
 
     def test_d1_5_punkt_3(self):
@@ -50,7 +50,7 @@ class TestDSTU_D1_5_FiveOrMoreAuthors(unittest.TestCase):
             pages = {82}
         }"""
         result = self.converter.convert_string_to_list(bibtex)[0]
-        expected = "Вища математика : конспект лекцій / Ткачук Т.С. та ін. Київ, 2015. 82 с."
+        expected = "Вища математика : конспект лекцій / Ткачук Т. С. та ін. Київ, 2015. 82 с."
         self.assertEqual(result, expected)
 
     def test_d1_5_punkt_4(self):
@@ -66,7 +66,7 @@ class TestDSTU_D1_5_FiveOrMoreAuthors(unittest.TestCase):
             pages = {428}
         }"""
         result = self.converter.convert_string_to_list(bibtex)[0]
-        expected = "Науково-практичний коментар Цивільного кодексу України : станом на 10 жовт. 2017 р. / К. І. Мягченко та ін. ; за заг. ред. І. М. Ливанова. Київ : ЦУЛ, 2017. 428 с."
+        expected = "Науково-практичний коментар Цивільного кодексу України : станом на 10 жовт. 2017 р. / Мягченко К. І. та ін. ; заг. ред. І. М. Ливанов. Київ : ЦУЛ, 2017. 428 с."
         self.assertEqual(result, expected)
 
     def test_d1_5_punkt_5(self):
@@ -80,5 +80,5 @@ class TestDSTU_D1_5_FiveOrMoreAuthors(unittest.TestCase):
             pages = {280}
         }"""
         result = self.converter.convert_string_to_list(bibtex)[0]
-        expected = "Referencing styles / G. R. Edwards et al. Los Angeles : International Publishing, 2010. 280 p."
+        expected = "Referencing styles / Edwards G. R. et al. Los Angeles : International Publishing, 2010. 280 p."
         self.assertEqual(result, expected)

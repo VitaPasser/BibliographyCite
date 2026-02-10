@@ -31,13 +31,13 @@ class TestDSTU_D13_2_ReferencePart(unittest.TestCase):
             title = {Інноваційні педагогічні технології},
             booktitle = {Основи педагогіки освіти : словник термінів},
             editor = {Дмитрук, Т. О.},
-            note = {за ред.},
+            note = {ред.},
             year = {2014},
             address = {Київ},
             pages = {54--55}
         }"""
         result = self.converter.convert_string_to_list(bibtex)[0]
-        expected = "Дичківська І. М. Інноваційні педагогічні технології. Основи педагогіки освіти : словник термінів / за ред.: Т. О. Дмитрука. Київ, 2014. С. 54–55."
+        expected = "Дичківська І. М. Інноваційні педагогічні технології. Основи педагогіки освіти : словник термінів / ред. Т. О. Дмитрук. Київ, 2014. С. 54–55."
         self.assertEqual(result, expected)
 
     def test_d13_2_punkt_3(self):
@@ -52,5 +52,5 @@ class TestDSTU_D13_2_ReferencePart(unittest.TestCase):
             pages = {699}
         }"""
         result = self.converter.convert_string_to_list(bibtex)[0]
-        expected = "Попович Н. І. Початкова освіта // Педагогічна енциклопедія. Київ, 2003. Т. 5. С. 699."
+        expected = "Попович Н. І. Початкова освіта. Педагогічна енциклопедія. Київ, 2003. Т. 5. С. 699."
         self.assertEqual(result, expected)

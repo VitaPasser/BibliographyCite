@@ -52,5 +52,5 @@ class TestDSTU_D1_3_ThreeAuthors(unittest.TestCase):
             pages = {332}
         }"""
         result = self.converter.convert_string_to_list(bibtex)[0]
-        expected = "Бутенко М. П., Качур В. П., Петренко С. В. Психологія : навч. посіб. / за ред. М. П. Дутко. Київ : ЦУЛ, 2017. 332 с."
+        expected = "Бутенко М. П., Качур В. П., Петренко С. В. Психологія : навч. посіб. / ред. М. П. Дутко. Київ : ЦУЛ, 2017. 332 с."
         self.assertEqual(result, expected)

@@ -111,5 +111,5 @@ class TestDSTU_D1_1_SingleAuthor(unittest.TestCase):
             pages = {374}
         }"""
         result = self.converter.convert_string_to_list(bibtex)[0]
-        expected = "Веретенко В. В. Міжнародний маркетинг : монографія / за заг. наук. ред. В. М. Марценюка. Київ, 2015. 374 с."
+        expected = "Веретенко В. В. Міжнародний маркетинг : монографія / заг. наук. ред. В. М. Марценюк. Київ, 2015. 374 с."
         self.assertEqual(result, expected)

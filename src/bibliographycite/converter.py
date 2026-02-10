@@ -202,27 +202,24 @@ class BibTeXToDSTUConverter:
                 if name:
                     initials.append(name[0].upper() + '.')
 
-            lastname_gen = self._to_genitive(lastname)
-
             if initials:
-                return f"{' '.join(initials)} {lastname_gen}"
-            return lastname_gen
+                return f"{' '.join(initials)} {lastname}"
+            return lastname
         else:
             parts = author.split()
             if len(parts) >= 2:
                 lastname = parts[-1]
                 firstnames = parts[:-1]
                 initials = [name[0].upper() + '.' for name in firstnames if name]
-                lastname_gen = self._to_genitive(lastname)
                 if initials:
-                    return f"{' '.join(initials)} {lastname_gen}"
-                return lastname_gen
+                    return f"{' '.join(initials)} {lastname}"
+                return lastname
             return author
 
     def _to_genitive(self, lastname: str) -> str:
         """Простое преобразование фамилии в родительный падеж"""
         if lastname.endswith('ко') or lastname.endswith('енко'):
-            return lastname
+            return lastname[:-1] + 'а'
         elif lastname.endswith('ук') or lastname.endswith('юк'):
             return lastname + 'а'
         elif lastname.endswith('ський') or lastname.endswith('цький'):
@@ -233,6 +230,8 @@ class BibTeXToDSTUConverter:
             return lastname + 'а'
         elif lastname.endswith('ня'):
             return lastname[:-2] + 'ні'
+        elif lastname.endswith('й'):
+            return lastname[:-1] + 'я'
         else:
             if any(char in lastname.lower() for char in 'абвгдежзийклмнопрстуфхцчшщъыьэюяієїґ'):
                 return lastname + 'а'
@@ -315,12 +314,18 @@ class BibTeXToDSTUConverter:
             formatted_editors_gen = [self._format_single_author_genitive(e) for e in editors]
             formatted_editor = ', '.join(formatted_editors_gen)
 
-            if 'за заг. наук. ред.' in note:
-                parts.append(f"/ за заг. наук. ред. {formatted_editor}")
-            elif 'за ред.' in note:
-                parts.append(f"/ за ред. {formatted_editor}")
+            if 'заг. наук. ред.' in note:
+                parts.append(f"/ заг. наук. ред. {formatted_editor}")
+            elif 'голов. ред.' in note:
+                parts.append(f"/ голов. ред. {formatted_editor}")
+            elif 'ред.' in note:
+                parts.append(f"/ ред. {formatted_editor}")
+            elif 'ed. by' in note:
+                parts.append(f"/ ed. by {formatted_editor}")
+            elif is_english:
+                parts.append(f"/ ed. by {formatted_editor}")
             else:
-                parts.append(f"/ за ред. {formatted_editor}")
+                parts.append(f"/ ред. {formatted_editor}")
 
         elif editor and author_count == 0:
             # Обработка редакторов без авторов
@@ -331,7 +336,7 @@ class BibTeXToDSTUConverter:
         if edition:
             edition_text = self._format_edition(edition, is_english)
             if note and ('переробл.' in note or 'допов.' in note):
-                note_text = note.replace('за заг. наук. ред.', '').replace('за ред.', '').strip()
+                note_text = note.replace('заг. наук. ред.', '').replace('ред.', '').strip()
                 if note_text:
                     edition_text = f"{edition_text}, {note_text}"
             parts.append(edition_text)
@@ -406,37 +411,37 @@ class BibTeXToDSTUConverter:
 
             if len(editors_list) == 1:
                 editor_name = self._format_single_author_genitive(editors_list[0])
-                parts.append(f"/ редкол.: {editor_name}")
+                parts.append(f"/ редкол. : {editor_name}")
             else:
                 first_editor = self._format_single_author_genitive(editors_list[0])
-                parts.append(f"/ редкол.: {first_editor} та ін.")
+                parts.append(f"/ редкол. : {first_editor} та ін.")
 
-        elif 'за заг. ред.' in note:
+        elif 'заг. ред.' in note:
             editors_list = [e.strip() for e in editor.split(' and ')]
             editors_list = [e for e in editors_list if e.lower() != 'others']
 
             if len(editors_list) == 1:
                 editor_name = self._format_single_author_genitive(editors_list[0])
-                parts.append(f"/ за заг. ред. {editor_name}")
+                parts.append(f"/ заг. ред. {editor_name}")
             else:
                 # Несколько редакторов
                 formatted_editors = [self._format_single_author_genitive(e) for e in editors_list]
-                parts.append(f"/ за ред. : {', '.join(formatted_editors)}")
+                parts.append(f"/ ред. : {', '.join(formatted_editors)}")
 
-        elif 'за ред.' in note:
+        elif 'ред.' in note:
             editors_list = [e.strip() for e in editor.split(' and ')]
             editors_list = [e for e in editors_list if e.lower() != 'others']
 
             if len(editors_list) == 1:
                 editor_name = self._format_single_author_genitive(editors_list[0])
-                parts.append(f"/ за ред. {editor_name}")
+                parts.append(f"/ ред. {editor_name}")
             else:
                 formatted_editors = [self._format_single_author_genitive(e) for e in editors_list]
-                parts.append(f"/ за ред. : {', '.join(formatted_editors)}")
+                parts.append(f"/ ред. : {', '.join(formatted_editors)}")
 
-        elif 'під заг. ред.' in note:
+        elif 'заг. ред.' in note:
             editor_name = self._format_single_author_genitive(editor.strip())
-            parts.append(f"/ під заг. ред. {editor_name}")
+            parts.append(f"/ заг. ред. {editor_name}")
 
         elif 'упоряд.' in note:
             compiler = self._format_single_author(editor.strip())
@@ -463,31 +468,34 @@ class BibTeXToDSTUConverter:
         journal = entry.get('journal', '')
         if journal:
             journal = self._clean_text(journal)
-            parts.append(journal)
+            parts.append(f'{journal}')
 
         # Год, том, номер
+        address = entry.get('address', '')
         year = entry.get('year', '')
         volume = entry.get('volume', '')
         number = entry.get('number', '')
 
         issue_parts = []
+        address_year = []
+        if address:
+            address_year.append(address)
         if year:
-            issue_parts.append(year)
+            address_year.append(year)
+        issue_parts.append(', '.join(address_year))
+
+        volume_number = []
         if volume:
             vol_text = f"Vol. {volume}" if is_english else f"Т. {volume}"
-            issue_parts.append(vol_text)
+            volume_number.append(vol_text)
         if number:
             number = number.replace('--', '–')
             num_text = f"No {number}" if is_english else f"№ {number}"
-            issue_parts.append(num_text)
+            volume_number.append(num_text)
+        issue_parts.append(', '.join(volume_number))
 
         if issue_parts:
-            if len(issue_parts) == 1:
-                parts.append(issue_parts[0])
-            elif len(issue_parts) == 2:
-                parts.append(f"{issue_parts[0]}. {issue_parts[1]}")
-            else:
-                parts.append(f"{issue_parts[0]}. {issue_parts[1]}, {issue_parts[2]}")
+            parts.append('. '.join(issue_parts))
 
         # Страницы
         pages = entry.get('pages', '')
@@ -764,6 +772,7 @@ class BibTeXToDSTUConverter:
     def _format_inbook(self, entry: Dict) -> str:
         """Форматирует часть книги согласно Д.13.1 DSTU 8302:2015"""
         parts = []
+        is_english = self._is_english(entry)
 
         # Автор главы
         author = entry.get('author', '')
@@ -783,8 +792,25 @@ class BibTeXToDSTUConverter:
             booktitle = self._clean_text(booktitle)
             editor = entry.get('editor', '')
             if editor:
-                formatted_editor, _ = self._format_authors(editor)
-                parts.append(f"{booktitle} / за ред. {formatted_editor}")
+                editors = [e.strip() for e in editor.split(' and ')]
+                formatted_editors_gen = [self._format_single_author_genitive(e) for e in editors]
+                formatted_editor = ', '.join(formatted_editors_gen)
+                parts.append(booktitle)
+                note = entry.get('note', '')
+                if 'заг. наук. ред.' in note:
+                    parts.append(f"/ заг. наук. ред. {formatted_editor}")
+                if 'заг. ред.' in note:
+                    parts.append(f"/ заг. ред. {formatted_editor}")
+                elif 'голов. ред.' in note:
+                    parts.append(f"/ голов. ред. {formatted_editor}")
+                elif 'ред.' in note:
+                    parts.append(f"/ ред. {formatted_editor}")
+                elif 'ed. by' in note:
+                    parts.append(f"/ ed. by {formatted_editor}")
+                elif is_english:
+                    parts.append(f"/ ed. by {formatted_editor}")
+                else:
+                    parts.append(f"/ ред. {formatted_editor}")
             else:
                 parts.append(booktitle)
 
@@ -808,7 +834,10 @@ class BibTeXToDSTUConverter:
         pages = entry.get('pages', '')
         if pages:
             pages = pages.replace('--', '–').replace('-', '–')
-            parts.append(f"С. {pages}")
+            if is_english:
+                parts.append(f"P. {pages}")
+            else:
+                parts.append(f"С. {pages}")
 
         # URL
         url = entry.get('url', '')

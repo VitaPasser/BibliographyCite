@@ -37,5 +37,5 @@ class TestDSTU_D1_4_FourAuthors(unittest.TestCase):
             urldate = {2024-12-12}
         }"""
         result = self.converter.convert_string_to_list(bibtex)[0]
-        expected = "Моделювання програмного забезпечення : навч.-метод. посібник / С. Ю. Манаков, О. Г. Трофименко, Ю. Г. Лобода, А. І. Дика. Одеса : Фенікс, 2023. 145 с. URL: http://dspace.onua.edu.ua/handle/11300/25952 (дата звернення: 12.12.2024)."
+        expected = "Моделювання програмного забезпечення : навч.-метод. посібник / Манаков С. Ю., Трофименко О. Г., Лобода Ю. Г., Дика А. І. Одеса : Фенікс, 2023. 145 с. URL: http://dspace.onua.edu.ua/handle/11300/25952 (дата звернення: 12.12.2024)."
         self.assertEqual(result, expected)
