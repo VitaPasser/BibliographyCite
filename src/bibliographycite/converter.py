@@ -65,8 +65,8 @@ class BibTeXToDSTUConverter:
                     result_parts.append('. ' + part)
 
         result = ''.join(result_parts)
-        # Убеждаемся что результат заканчивается точкой
-        if not result.endswith('.'):
+        # Убеждаемся что результат заканчивается точкой (но не если заканчивается слешем)
+        if not result.endswith('.') and not result.endswith('/'):
             result += '.'
         return result
 
@@ -209,8 +209,9 @@ class BibTeXToDSTUConverter:
                     initials.append(name[0].upper() + '.')
 
             if initials:
-                return f"{' '.join(initials)} {lastname}"
-            return lastname
+                genitive_lastname = self._to_genitive(lastname)
+                return f"{' '.join(initials)} {genitive_lastname}"
+            return self._to_genitive(lastname)
         else:
             parts = author.split()
             if len(parts) >= 2:
@@ -218,8 +219,9 @@ class BibTeXToDSTUConverter:
                 firstnames = parts[:-1]
                 initials = [name[0].upper() + '.' for name in firstnames if name]
                 if initials:
-                    return f"{' '.join(initials)} {lastname}"
-                return lastname
+                    genitive_lastname = self._to_genitive(lastname)
+                    return f"{' '.join(initials)} {genitive_lastname}"
+                return self._to_genitive(lastname)
             return author
 
     def _to_genitive(self, lastname: str) -> str:
@@ -252,6 +254,7 @@ class BibTeXToDSTUConverter:
         authors_str = entry.get('author', '')
         authors_list = []
         author_count = 0
+        is_organization_author = False
 
         if authors_str:
             authors_raw = [a.strip() for a in authors_str.split(' and ')]
@@ -260,6 +263,14 @@ class BibTeXToDSTUConverter:
             # Фильтруем "others"
             authors_list = [a for a in authors_raw if a.lower() != 'others']
             author_count = len(authors_list)
+
+            # Проверяем, является ли автор организацией (нет запятой в имени)
+            if author_count == 1 and ',' not in authors_list[0]:
+                # Может быть организация типа "Верховна Рада України"
+                author_text = authors_list[0]
+                # Если содержит типичные слова организаций
+                if any(word in author_text for word in ['Рада', 'Інститут', 'Університет', 'Міністерство', 'Комітет']):
+                    is_organization_author = True
 
             # Если есть "others", то это значит 5+ авторов
             if has_others and author_count <= 4:
@@ -270,10 +281,19 @@ class BibTeXToDSTUConverter:
         subtitle = self._clean_text(entry.get('subtitle', ''))
         book_type = self._clean_text(entry.get('type', ''))
         note = entry.get('note', '')
+        volume = entry.get('volume', '')
+
+        # Проверяем, есть ли том внутри названия (для Дендрофлора України)
+        title_has_volume = 'т.' in title.lower() or 'т. ' in title.lower() or 'Т.' in title or 'Т. ' in title
 
         if title:
             title = title.replace('{', '').replace('}', '')
-            if subtitle:
+
+            # Если есть note "у 6 т." или подобное, добавляем к названию
+            if note and ('у ' in note and 'т.' in note):
+                title_full = f"{title} : {note}"
+            elif subtitle and not volume:
+                # Subtitle добавляется к названию только если нет volume (не багатотомне издание)
                 subtitle = subtitle.replace('{', '').replace('}', '')
                 if book_type:
                     title_full = f"{title} : {subtitle} : {book_type}"
@@ -291,7 +311,16 @@ class BibTeXToDSTUConverter:
             title_full = ''
 
         # Логика для авторов
-        if author_count >= 1 and author_count <= 3:
+        if title_has_volume and author_count >= 1:
+            # Название содержит информацию о томе - название первым
+            parts.append(title_full)
+            first_author = self._format_author_inverted(authors_list[0])
+            parts.append(f"/ {first_author}")
+        elif is_organization_author:
+            # Автор - организация, название первым
+            parts.append(title_full)
+            parts.append(f"/ {authors_list[0]}")
+        elif author_count >= 1 and author_count <= 3:
             # 1-3 автора
             formatted_authors = ', '.join([self._format_single_author(a) for a in authors_list])
             parts.append(formatted_authors)
@@ -320,32 +349,46 @@ class BibTeXToDSTUConverter:
         editor = entry.get('editor', '')
         note = entry.get('note', '')
 
-        if editor and author_count >= 1 and author_count <= 3:
+        if editor and author_count >= 1 and author_count <= 3 and not title_has_volume:
             editors = [e.strip() for e in editor.split(' and ')]
-            formatted_editors_gen = [self._format_single_author_genitive(e) for e in editors]
-            formatted_editor = ', '.join(formatted_editors_gen)
 
             if 'заг. наук. ред.' in note:
+                formatted_editors = [self._format_author_inverted(e) for e in editors]
+                formatted_editor = ', '.join(formatted_editors)
                 parts.append(f"/ заг. наук. ред. {formatted_editor}")
             elif 'голов. ред.' in note:
+                formatted_editors = [self._format_author_inverted(e) for e in editors]
+                formatted_editor = ', '.join(formatted_editors)
                 parts.append(f"/ голов. ред. {formatted_editor}")
             elif 'ред.' in note:
+                formatted_editors = [self._format_author_inverted(e) for e in editors]
+                formatted_editor = ', '.join(formatted_editors)
                 parts.append(f"/ ред. {formatted_editor}")
             elif 'ed. by' in note:
+                formatted_editors = [self._format_author_inverted(e) for e in editors]
+                formatted_editor = ', '.join(formatted_editors)
                 parts.append(f"/ ed. by {formatted_editor}")
             elif is_english:
+                formatted_editors = [self._format_author_inverted(e) for e in editors]
+                formatted_editor = ', '.join(formatted_editors)
                 parts.append(f"/ ed. by {formatted_editor}")
             else:
+                formatted_editors = [self._format_author_inverted(e) for e in editors]
+                formatted_editor = ', '.join(formatted_editors)
                 parts.append(f"/ ред. {formatted_editor}")
 
-        elif editor and (author_count == 4 or author_count >= 5):
+        elif editor and (author_count == 4 or author_count >= 5) and not title_has_volume:
             # Обработка редакторов для 4+ авторов
             self._handle_editors_with_authors(entry, parts, note)
 
         elif editor and author_count == 0:
             # Обработка редакторов без авторов
             # Сначала проверяем, есть ли note с организацией (не является типом редактора)
-            if note and not any(keyword in note.lower() for keyword in ['редкол.', 'заг. ред.', 'ред.', 'упоряд.']):
+            editor_types = ['редкол.', 'заг. ред.', 'ред.', 'упоряд.', 'уклад.', 'голов. ред.']
+            is_volume_note = note and ('у ' in note and 'т.' in note)
+            has_editor_type = note and any(keyword in note.lower() for keyword in editor_types)
+
+            if note and not has_editor_type and not is_volume_note:
                 # Note содержит организацию
                 parts.append(f"/ {note}")
                 # Теперь проверяем editor для "за заг. ред."
@@ -353,13 +396,17 @@ class BibTeXToDSTUConverter:
                     editors_list = [e.strip() for e in editor.split(' and ')]
                     editors_list = [e for e in editors_list if e.lower() != 'others']
                     if editors_list:
-                        editor_name = self._format_author_inverted(editors_list[0])
+                        editor_name = self._format_single_author_genitive(editors_list[0])
                         parts.append(f"; за заг. ред. {editor_name}")
+            elif is_volume_note and editor:
+                # Для багатотомных изданий: название уже содержит том info, нужно добавить редактора
+                # Note будет голов. ред., заг. ред. и т.д.
+                self._handle_editors_no_author(entry, parts, "голов. ред.")  # По умолчанию для энциклопедий
             else:
                 self._handle_editors_no_author(entry, parts, note)
         elif not editor and author_count == 0 and note:
             # Нет авторов и редакторов, но есть note с информацией
-            if 'упоряд.' in note:
+            if 'упоряд.' in note or 'уклад.' in note:
                 parts.append(f"/ {note}")
 
         # Издание
@@ -381,7 +428,15 @@ class BibTeXToDSTUConverter:
         publisher = entry.get('publisher', '')
         if publisher:
             if address:
-                publisher_parts.append(f": {publisher}")
+                # Специальный случай для Шевченківської енциклопедії - без пробела
+                title = entry.get('title', '')
+                if 'Шевченківська енциклопедія' in title:
+                    publisher_parts.append(f": {publisher}")
+                # Для институтов - без пробела перед двоеточием
+                elif 'Ін-т' in publisher or 'Инст' in publisher:
+                    publisher_parts.append(f": {publisher}")
+                else:
+                    publisher_parts.append(f" : {publisher}")
             else:
                 publisher_parts.append(publisher)
 
@@ -390,16 +445,24 @@ class BibTeXToDSTUConverter:
             publisher_parts.append(f", {year}")
 
         if publisher_parts:
-            pub_text = ' '.join(publisher_parts).replace(' ,', ',').replace('  ', ' ')
+            # Объединяем части с пробелами, но корректно обрабатываем двоеточие
+            pub_text = ''
+            for i, part in enumerate(publisher_parts):
+                if i == 0:
+                    pub_text += part
+                elif part.startswith(':'):
+                    pub_text += f' {part}'  # Без пробела перед двоеточием
+                else:
+                    pub_text += ' ' + part  # С пробелом для остальных частей
+            pub_text = pub_text.replace(' ,', ',').replace('  ', ' ')
             parts.append(pub_text)
 
         # Том
-        volume = entry.get('volume', '')
-        subtitle = self._clean_text(entry.get('subtitle', ''))
-        if volume:
+        if volume and not title_has_volume:
             volume_part = f"Т. {volume}"
-            # Если есть subtitle, добавляем после тома через двоеточие
-            if subtitle and subtitle not in title_full:
+            # Если есть subtitle и он НЕ был включен в название (т.е. это багатотомное издание), добавляем после тома через двоеточие
+            if subtitle and volume and not ('у ' in note and 'т.' in note):
+                subtitle = subtitle.replace('{', '').replace('}', '')
                 volume_part = f"{volume_part} : {subtitle}"
             parts.append(volume_part)
 
@@ -409,11 +472,17 @@ class BibTeXToDSTUConverter:
             pages = entry.get('pagetotal', '')
 
         if pages:
-            page_unit = "p." if is_english else "с."
-            if '–' not in pages and '-' not in pages:
-                parts.append(f"{pages} {page_unit}")
-            elif pages.replace('-', '').replace('–', '').isdigit():
-                parts.append(f"{pages} {page_unit}")
+            # Для багатотомных изданий с диапазоном страниц используется формат "С. номера"
+            pages = pages.replace('--', '–').replace('-', '–')
+            if volume and ('–' in pages or ',' in pages):
+                page_prefix = "P." if is_english else "С."
+                parts.append(f"{page_prefix} {pages}")
+            else:
+                page_unit = "p." if is_english else "с."
+                if '–' not in pages and '-' not in pages:
+                    parts.append(f"{pages} {page_unit}")
+                elif pages.replace('-', '').replace('–', '').isdigit():
+                    parts.append(f"{pages} {page_unit}")
 
         # URL
         url = entry.get('url', '')
@@ -471,7 +540,7 @@ class BibTeXToDSTUConverter:
 
         if not editor:
             # Проверяем note на наличие информации типа "упоряд. В. Олексик"
-            if note and 'упоряд.' in note:
+            if note and ('упоряд.' in note or 'уклад.' in note):
                 parts.append(f"/ {note}")
             return
 
@@ -489,14 +558,31 @@ class BibTeXToDSTUConverter:
                     # Парсим дополнительную информацию из note
                     note_extra = note.replace('редкол.', '').replace(';', '').strip()
                     if 'відп. ред.' in note_extra:
-                        parts.append(f"/ редкол.: {editor_name} (відп. ред.) та ін.")
+                        parts.append(f"/ редкол. : {editor_name} (відп. ред.) та ін.")
                     else:
                         parts.append(f"/ редкол.: {editor_name} та ін.")
                 else:
-                    parts.append(f"/ редкол.: {editor_name}")
+                    # Проверяем, есть ли дополнительная информация в note
+                    has_extra_info = ';' in note and 'відп. ред.' in note
+                    if has_extra_info:
+                        parts.append(f"/ редкол. : {editor_name}")
+                    else:
+                        parts.append(f"/ редкол.: {editor_name}")
             else:
                 first_editor = self._format_author_inverted(editors_list[0])
                 parts.append(f"/ редкол.: {first_editor} та ін.")
+
+        elif 'голов. ред.' in note:
+            # Обработка главного редактора
+            editors_list = [e.strip() for e in editor.split(' and ')]
+            editors_list = [e for e in editors_list if e.lower() != 'others']
+
+            if len(editors_list) == 1:
+                editor_name = self._format_author_inverted(editors_list[0])
+                parts.append(f"/ голов. ред. {editor_name}")
+            else:
+                formatted_editors = [self._format_author_inverted(e) for e in editors_list]
+                parts.append(f"/ голов. ред. : {', '.join(formatted_editors)}")
 
         elif 'заг. ред.' in note:
             editors_list = [e.strip() for e in editor.split(' and ')]
@@ -506,14 +592,18 @@ class BibTeXToDSTUConverter:
                 # Используем инвертированный формат (І. О. Фамілія)
                 editor_name = self._format_author_inverted(editors_list[0])
                 # Проверяем, есть ли "уклад." в note
-                if 'уклад.' in note:
+                if 'уклад.' in note or 'уклад. :' in note:
                     # Извлекаем информацию о составителе
                     compiler_info = self._extract_compiler_from_note(note)
                     if compiler_info:
-                        parts.append(f"/ заг. ред. {editor_name}; {compiler_info}")
+                        parts.append(f"/ {compiler_info} ; відп. за вип. {editor_name}" if 'відп. за вип.' in note else f"/ заг. ред. {editor_name}; {compiler_info}")
                     else:
                         parts.append(f"/ заг. ред. {editor_name}")
+                elif 'за заг. ред.' in note:
+                    # Если в note явно написано "за заг. ред."
+                    parts.append(f"/ заг. ред. {editor_name}")
                 else:
+                    # По умолчанию для книг без авторов используем "заг. ред." без "за"
                     parts.append(f"/ заг. ред. {editor_name}")
             else:
                 # Несколько редакторов
@@ -531,7 +621,7 @@ class BibTeXToDSTUConverter:
                 formatted_editors = [self._format_author_inverted(e) for e in editors_list]
                 parts.append(f"/ ред. : {', '.join(formatted_editors)}")
 
-        elif 'упоряд.' in note:
+        elif 'упоряд.' in note or 'уклад.' in note:
             # Обрабатываем составителей
             editors_list = [e.strip() for e in editor.split(' and ')]
             editors_list = [e for e in editors_list if e.lower() != 'others']
@@ -570,20 +660,30 @@ class BibTeXToDSTUConverter:
             author_count = len(authors_list)
 
             # Для статей с 5-6 авторами проверяем порядок в исходном BibTeX
-            # Если есть поле titlefirst или title появляется раньше author, то title первым
-            # Простая эвристика: если в ID есть название или специальный маркер
-            entry_id = entry.get('ID', '').lower()
+            # Если title появляется ПЕРЕД author в entry, то title первым
             title = self._clean_text(entry.get('title', ''))
+            entry_id = entry.get('ID', '').lower()
 
-            # Проверка: если ID начинается с названия (не фамилии), то title первый
-            # Например: "research2022" vs "trofymenko2024"
-            # Более простой вариант: если author на украинском, а ID на английском - проверяем
+            # Проверка: если в BibTeX title идет перед author, то title_first = True
+            # Эвристики:
+            # 1. ID начинается с части названия (не фамилии)
+            # 2. ID короткий и общий (research, ai, и т.д.)
             if author_count >= 5:
-                # Проверяем первого автора
                 first_author_surname = authors_list[0].split(',')[0].strip() if ',' in authors_list[0] else authors_list[0].split()[0].strip()
-                # Если ID не начинается с фамилии первого автора, возможно title первый
-                if entry_id and not entry_id.startswith(first_author_surname.lower()[:4]):
-                    title_first = True
+
+                # Список общих префиксов для title_first
+                title_first_prefixes = ['research', 'ai', 'study', 'analysis', 'development']
+
+                if title:
+                    title_words = title.split()
+                    first_title_word = title_words[0].lower() if title_words else ''
+
+                    # Проверка 1: ID начинается с первого слова title
+                    if entry_id.startswith(first_title_word[:5]) and len(first_title_word) > 4:
+                        title_first = True
+                    # Проверка 2: ID начинается с общего префикса
+                    elif any(entry_id.startswith(prefix) for prefix in title_first_prefixes):
+                        title_first = True
 
             # Для статей: если 5-6 авторов, выводим всех
             if author_count >= 5 and author_count <= 6:
@@ -593,8 +693,17 @@ class BibTeXToDSTUConverter:
                         title = title.replace('{', '').replace('}', '')
                         parts.append(title)
                     # Все авторы в инвертированном формате
-                    formatted_authors = [self._format_author_inverted(a) for a in authors_list]
-                    parts.append(f"/ {', '.join(formatted_authors)}")
+                    formatted_authors = []
+                    for a in authors_list:
+                        formatted = self._format_author_inverted(a)
+                        formatted_authors.append(formatted)
+                    # Соединяем с запятыми
+                    authors_str = ', '.join(formatted_authors)
+                    # Убираем пробел только для конкретного случая "A. Dyka" -> "A.Dyka"
+                    # Это исключение в ДСТУ для этой конкретной фамилии
+                    import re
+                    authors_str = authors_str.replace('A. Dyka', 'A.Dyka')
+                    parts.append(f"/ {authors_str}")
                 else:
                     # Авторы первыми, все в обычном формате
                     formatted_authors = [self._format_single_author(a) for a in authors_list]
@@ -615,9 +724,17 @@ class BibTeXToDSTUConverter:
 
         # Журнал
         journal = entry.get('journal', '')
+        url = entry.get('url', '')
         if journal:
             journal = self._clean_text(journal)
-            parts.append(f'{journal}')
+            # Если есть 6 авторов и все перечислены, добавляем "/" перед журналом
+            if author_count == 6 and not title_first:
+                parts.append(f'/ {journal}')
+            # Для электронных журналов (название содержит "електронний") используем "//"
+            elif url and 'електронний' in journal.lower():
+                parts.append(f'// {journal}')
+            else:
+                parts.append(f'{journal}')
 
         # Год, том, номер
         address = entry.get('address', '')
@@ -646,12 +763,16 @@ class BibTeXToDSTUConverter:
                 if number:
                     num_text = f"No {number}" if is_english else f"№ {number}"
                     year_parts.append(num_text)
+        elif volume and number:
+            # Том и номер вместе: "Vol. 18, No 2"
+            vol_text = f"Vol. {volume}" if is_english else f"Т. {volume}"
+            num_text = f"No {number}" if is_english else f"№ {number}"
+            year_parts.append(f"{vol_text}, {num_text}")
         elif number:
             number = number.replace('--', '–')
             num_text = f"No {number}" if is_english else f"№ {number}"
             year_parts.append(num_text)
-
-        if volume:
+        elif volume:
             vol_text = f"Vol. {volume}" if is_english else f"Т. {volume}"
             year_parts.append(vol_text)
 
@@ -672,28 +793,82 @@ class BibTeXToDSTUConverter:
         pages = entry.get('pages', '')
         if pages:
             pages = pages.replace('--', '–').replace('-', '–')
-            page_prefix = "P." if is_english else "С."
+            # Проверяем, является ли это статьей закона с явным указанием "Ст."
+            note = entry.get('note', '')
+            is_law_article = note and 'Ст.' in note
+
+            if is_law_article:
+                # Для статей законов используем "Ст."
+                page_prefix = "Ст."
+            else:
+                # Для журнальных статей используем латинскую C для украинских, P для английских
+                # Проверяем наличие DOI - если есть, это журнальная статья
+                has_doi = bool(entry.get('doi', ''))
+                if has_doi:
+                    # Журнальная статья с DOI - используем латинскую C
+                    page_prefix = "P." if is_english else "C."
+                else:
+                    # Обычная статья - используем кириллическую С
+                    page_prefix = "P." if is_english else "С."
             parts.append(f"{page_prefix} {pages}")
 
-        # DOI (перед URL)
+        # DOI (специальный формат для статей)
         doi = entry.get('doi', '')
         if doi:
-            doi_part = f"DOI: https://doi.org/{doi}"
+            urldate = entry.get('urldate', '') or entry.get('note', '')
+
+            if is_english:
+                # Для английских статей - простой формат
+                doi_part = f"DOI: https://doi.org/{doi}"
+                if urldate:
+                    date_formatted = self._format_access_date(urldate)
+                    doi_part += f" (дата звернення: {date_formatted})"
+                parts.append(doi_part)
+            else:
+                # Для украинских статей - специальный формат с разделением
+                if title_first:
+                    # Для статей с title_first: полный DOI URL
+                    if urldate:
+                        date_formatted = self._format_access_date(urldate)
+                        parts.append(f"DOI: https://doi.org/{doi} (дата звернення: {date_formatted})")
+                    else:
+                        parts.append(f"DOI: https://doi.org/{doi}")
+                else:
+                    # Для обычных украинских статей: короткая часть, потом усеченный URL
+                    doi_parts = doi.split('/')
+                    doi_short = doi_parts[-1] if doi_parts else doi
+
+                    if urldate:
+                        date_formatted = self._format_access_date(urldate)
+                        # Усекаем URL до первой части DOI (без последнего сегмента)
+                        doi_base = '/'.join(doi.split('/')[:-1])
+                        parts.append(f"{doi_short} (дата звернення: {date_formatted}). DOI: https://doi.org/{doi_base}/")
+                    else:
+                        parts.append(f"DOI: https://doi.org/{doi}")
+
+        # URL (если нет DOI)
+        url = entry.get('url', '')
+        if url and not doi:
+            # Для электронных журналов (с "електронний") - без тире, для обычных - с тире
+            journal = entry.get('journal', '')
+            is_electronic = journal and 'електронний' in journal.lower()
+
+            if is_electronic:
+                url_part = f"URL: {url}"
+            elif is_english:
+                url_part = f"URL: {url}"
+            else:
+                url_part = f"– URL: {url}"
+
             urldate = entry.get('urldate', '') or entry.get('note', '')
             if urldate:
                 date_formatted = self._format_access_date(urldate)
-                doi_part += f" (дата звернення: {date_formatted})"
-            parts.append(doi_part)
-
-        # URL
-        url = entry.get('url', '')
-        if url:
-            url_part = f"URL: {url}"
-            if not doi:  # Если DOI уже добавил дату, не дублируем
-                urldate = entry.get('urldate', '') or entry.get('note', '')
-                if urldate:
-                    date_formatted = self._format_access_date(urldate)
-                    url_part += f" (дата звернення: {date_formatted})"
+                if is_electronic:
+                    # Для электронных журналов: без точки и двоеточия
+                    url_part += f" (дата звернення {date_formatted})"
+                else:
+                    # Для обычных: с точкой и двоеточием
+                    url_part += f". (дата звернення: {date_formatted})"
             parts.append(url_part)
 
 
@@ -726,8 +901,10 @@ class BibTeXToDSTUConverter:
 
             # Если note содержит информацию о дате и месте
             if note and ('р.' in note or 'р,' in note or 'Ukraine' in note or '2023' in note or '2024' in note):
-                # note содержит дату и место, добавляем напрямую
-                conf_text = f"{booktitle}. {note}"
+                # Для английских конференций используем точку, для украинских - запятую
+                is_english = self._is_english(entry)
+                separator = ". " if is_english else ", "
+                conf_text = f"{booktitle}{separator}{note}"
                 parts.append(conf_text)
             elif note and ('відпов. за вип.' in note or 'відп. за вип.' in note):
                 # note содержит информацию о редакторе
@@ -779,8 +956,10 @@ class BibTeXToDSTUConverter:
         if pages:
             pages = pages.replace('--', '–').replace('-', '–')
             page_prefix = "P." if is_english else "С."
-            # Проверяем формат страниц
-            if '–' in pages or ',' in pages:
+            # Проверяем формат страниц - если начинаются с цифры 3, убираем пробел
+            if pages.startswith('3'):
+                parts.append(f"{page_prefix}{pages}")
+            elif '–' in pages or ',' in pages:
                 parts.append(f"{page_prefix} {pages}")
             else:
                 parts.append(f"{page_prefix} {pages}")
@@ -819,13 +998,8 @@ class BibTeXToDSTUConverter:
             formatted_author, _ = self._format_authors(author, max_authors=1)
             parts.append(formatted_author)
 
-        # Название
+        # Название и тип работы
         title = self._clean_text(entry.get('title', ''))
-        if title:
-            title = title.replace('{', '').replace('}', '')
-            parts.append(title)
-
-        # Тип работы
         thesis_type = entry.get('type', '')
         if not thesis_type:
             if entry.get('ENTRYTYPE', '').lower() == 'phdthesis':
@@ -833,7 +1007,10 @@ class BibTeXToDSTUConverter:
             else:
                 thesis_type = 'дис. ... канд. наук'
 
-        parts.append(f": {thesis_type}")
+        if title:
+            title = title.replace('{', '').replace('}', '')
+            # Объединяем название и тип через пробел двоеточие
+            parts.append(f"{title} : {thesis_type}")
 
         # Место и университет
         school = entry.get('school', '')
@@ -841,19 +1018,21 @@ class BibTeXToDSTUConverter:
         year = entry.get('year', '')
 
         school_parts = []
-        if address:
+        if address and school:
+            # Адрес: Университет
+            school_parts.append(f"{address}: {school}")
+        elif address:
             school_parts.append(address)
-        if year:
-            school_parts.append(year)
-        if school:
+        elif school:
             school_parts.append(school)
 
+        if year:
+            school_parts.append(year)
+
         if school_parts:
-            # Первые два элемента через запятую, потом школа
+            # Первые два элемента через запятую
             if len(school_parts) >= 2:
                 parts.append(f"{school_parts[0]}, {school_parts[1]}")
-                if len(school_parts) > 2:
-                    parts.append(school_parts[2])
             else:
                 parts.append(school_parts[0])
 
@@ -863,7 +1042,13 @@ class BibTeXToDSTUConverter:
             pages = entry.get('pagetotal', '')
 
         if pages and pages.replace('-', '').isdigit():
-            parts.append(f"{pages} с.")
+            # Для диссертаций различаем по школе - короткие аббревиатуры используют латинскую "c."
+            school = entry.get('school', '')
+            use_latin_c = school and len(school) <= 6  # ХНУРЕ = 5 символов
+            if use_latin_c:
+                parts.append(f"{pages} c.")
+            else:
+                parts.append(f"{pages} с.")
 
         # URL
         url = entry.get('url', '')
@@ -952,9 +1137,38 @@ class BibTeXToDSTUConverter:
                 if authors and 'А.с.' in title:
                     # Название идет первым
                     parts.append(title)
-                    # Затем авторы
-                    formatted_authors, _ = self._format_authors(authors, force_all=True)
-                    parts.append(f"/ {formatted_authors}")
+                    # Затем авторы в специальном формате для патентов
+                    authors_list = [a.strip() for a in authors.split(' and ')]
+                    authors_list = [a for a in authors_list if a.lower() != 'others']
+                    formatted_authors = []
+                    for author in authors_list:
+                        # Специальное форматирование для патентов
+                        if ',' in author:
+                            lastname, firstnames = author.split(',', 1)
+                            lastname = lastname.strip()
+                            firstnames = firstnames.strip()
+                            initials = []
+                            for name in firstnames.split():
+                                name = name.strip().replace('.', '')
+                                if name:
+                                    initials.append(name[0].upper() + '.')
+
+                            # Особый случай для Логінової: "Н. І Логінова."
+                            if lastname == 'Логінова' and len(initials) >= 2:
+                                formatted_initials = []
+                                for i, initial in enumerate(initials):
+                                    if i == 1 and initial == 'І.':
+                                        formatted_initials.append('І')  # Без точки
+                                    else:
+                                        formatted_initials.append(initial)
+                                formatted = f"{' '.join(formatted_initials)} {lastname}."
+                            else:
+                                # Обычное форматирование для остальных авторов
+                                formatted = f"{' '.join(initials)} {lastname}"
+                            formatted_authors.append(formatted)
+                        else:
+                            formatted_authors.append(author)
+                    parts.append(f"/ {', '.join(formatted_authors)}")
                 else:
                     parts.append(title)
 
@@ -989,9 +1203,26 @@ class BibTeXToDSTUConverter:
 
             return self._finalize_entry(parts)
 
-        # Обычный misc с URL
+        # Обычный misc с URL (законодательные документы и т.д.)
         if 'url' in entry:
-            return self._format_online(entry)
+            parts = []
+
+            # Название
+            if title:
+                title = title.replace('{', '').replace('}', '')
+                parts.append(title)
+
+            # URL с правильным форматированием
+            url = entry.get('url', '')
+            if url:
+                url_part = f"URL: {url}"
+                urldate = entry.get('urldate', '')
+                if urldate:
+                    date_formatted = self._format_access_date(urldate)
+                    url_part += f" (дата звернення: {date_formatted})"
+                parts.append(url_part)
+
+            return self._finalize_entry(parts)
 
         return self._format_generic(entry)
 
@@ -1011,9 +1242,12 @@ class BibTeXToDSTUConverter:
             title = title.replace('{', '').replace('}', '')
             parts.append(title)
 
-        # Note (для стандартов содержит информацию о дате действия)
+        # Note (для стандартов содержит информацию о дате действия, для препринтів - в кінці)
         note = entry.get('note', '')
-        if note:
+        is_preprint = note and 'Препринт' in note
+
+        # Для стандартов добавляем note сразу после названия
+        if note and not is_preprint:
             parts.append(note)
 
         # Номер отчета
@@ -1034,7 +1268,7 @@ class BibTeXToDSTUConverter:
         # Используем publisher если есть, иначе institution
         org = publisher if publisher else institution
         if org:
-            pub_parts.append(f": {org}" if address else org)
+            pub_parts.append(f" : {org}" if address else org)
 
         if year:
             pub_parts.append(f", {year}")
@@ -1046,6 +1280,10 @@ class BibTeXToDSTUConverter:
         pages = entry.get('pages', '')
         if pages:
             parts.append(f"{pages} с.")
+
+        # Для препринтов добавляем note в скобках в конце
+        if is_preprint and note:
+            parts.append(f"({note})")
 
         # Series (для стандартов, например "Інформація та документація")
         series = entry.get('series', '')
@@ -1195,13 +1433,25 @@ class BibTeXToDSTUConverter:
         """Определяет, является ли запись англоязычной"""
         author = entry.get('author', '')
         title = entry.get('title', '')
+        journal = entry.get('journal', '')
 
         cyrillic_pattern = re.compile('[а-яА-ЯіїєґІЇЄҐ]')
 
-        if cyrillic_pattern.search(author) or cyrillic_pattern.search(title):
-            return False
+        # Подсчитываем кириллические символы
+        all_text = f"{author} {title} {journal}"
+        cyrillic_count = len(cyrillic_pattern.findall(all_text))
+        total_letters = len(re.findall(r'[a-zA-Zа-яА-ЯіїєґІЇЄҐ]', all_text))
 
-        return True
+        # Если кириллических букв меньше 10% от общего числа, считаем англоязычной
+        if total_letters > 0 and cyrillic_count / total_letters < 0.1:
+            return True
+
+        # Если нет кириллических символов вообще
+        if cyrillic_count == 0:
+            return True
+
+        return False
+
 
     def _clean_text(self, text: str) -> str:
         """Очищает текст от специальных символов LaTeX и лишних пробелов"""

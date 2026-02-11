@@ -37,5 +37,5 @@ class TestDSTU_D7_Patents(unittest.TestCase):
             urldate = {2024-12-12}
         }"""
         result = self.converter.convert_string_to_list(bibtex)[0]
-        expected = "А.с. № 129198 від 21.08.2024. Комп'ютерна програма «Black Sea Hanter» / Н. О. Струк, А. І. Дика, О. В. Задерейко, Н. І Логінова., О. Г. Трофименко https://sis.nipo.gov.ua/uk/search/detail/1821799/ (дата звернення: 12.12.2024)."
+        expected = "А.с. № 129198 від 21.08.2024. Комп'ютерна програма «Black Sea Hanter» / Н. О. Струк, А. І. Дика, О. В. Задерейко, Н. І Логінова., О. Г. Трофименко. https://sis.nipo.gov.ua/uk/search/detail/1821799/ (дата звернення: 12.12.2024)."
         self.assertEqual(result, expected)
