@@ -62,7 +62,7 @@ bibtex = """
 """
 
 # Конвертуємо
-result = converter.convert_string_to_list(bibtex)
+result = converter.convert_string_to_list(bibtex, ['ivanov2020'])
 print(result[0])
 # Виведе: Іванов О. І., Петров П. П. Основи програмування : навчальний посібник. 
 #         Київ : Наукова думка, 2020. 300 с.
@@ -192,4 +192,4 @@ MIT License - дивіться [LICENSE](LICENSE)
 
 ---
 
-**Зроблено в Україні** 🇺🇦 | **100% покриття ДСТУ 8302:2015** ✅
+**100% покриття ДСТУ 8302:2015** ✅

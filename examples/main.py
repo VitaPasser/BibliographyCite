@@ -108,9 +108,9 @@ def main():
     print()
 
     # Конвертуємо в список
-    bibliography_list = converter.convert_string_to_list(sample_bibtex)
+    bibliography_list = converter.convert_string_to_list(sample_bibtex, ['zadereyko2022'])
 
-    print("Результат (ДСТУ 8302:2015):")
+    print("РЕЗУЛЬТАТ (ДСТУ 8302:2015):")
     print("-" * 80)
     for i, entry in enumerate(bibliography_list, 1):
         print(f"{i}. {entry}")
@@ -118,8 +118,30 @@ def main():
     print("-" * 80)
     print()
 
-    # Також можна отримать как одну строку
+    # Также можна отримать как одну строку
     formatted_string = converter.convert_string_to_formatted_string(sample_bibtex, numbered=True)
+
+    # Демонстрируем выборочную конвертацию по ID
+    print("ПРИКЛАД ВИБІРКОВОЇ КОНВЕРТАЦІЇ:")
+    print("-" * 80)
+
+    # Получаем все ID из строки
+    all_ids = converter.get_entry_ids_from_string(sample_bibtex)
+    print(f"Всього записів у прикладі: {len(all_ids)}")
+    print(f"ID записів: {', '.join(all_ids)}")
+    print()
+
+    # Конвертируем только выбранные записи
+    selected_ids = ['martynenko2017', 'zadereyko2022']
+    selected_entries = converter.convert_string_to_list(sample_bibtex, selected_ids=selected_ids)
+
+    print(f"Конвертуємо тільки записи з ID: {', '.join(selected_ids)}")
+    print("Результат:")
+    for i, entry in enumerate(selected_entries, 1):
+        print(f"{i}. {entry}")
+        print()
+    print("-" * 80)
+    print()
 
     print("ІНСТРУКЦІЯ З ВИКОРИСТАННЯ:")
     print("-" * 80)
@@ -130,14 +152,23 @@ def main():
 2. Створіть екземпляр:
    converter = BibTeXToDSTUConverter()
 
-3. Конвертуйте файл:
+3. Конвертуйте файл (усі записи):
    result = converter.convert_file_to_list('references.bib')
    
-4. Або конвертуйте строку:
-   result = converter.convert_string_to_list(bibtex_string)
+4. Конвертуйте файл (тільки вибрані записи):
+   ids = ['entry1', 'entry2', 'entry3'] 
+   result = converter.convert_file_to_list('references.bib', selected_ids=ids)
+   
+5. Отримайте список усіх ID з файлу:
+   all_ids = converter.get_entry_ids_from_file('references.bib')
+   
+6. Конвертуйте строку (вибіркова конвертація):
+   result = converter.convert_string_to_list(bibtex_string, selected_ids=['id1', 'id2'])
 
-5. Отримайте відформатовану строку:
-   formatted = converter.convert_file_to_string('references.bib')
+7. Отримайте відформатовану строку з вибраними записами:
+   formatted = converter.convert_file_to_string('references.bib', 
+                                                numbered=True, 
+                                                selected_ids=['id1', 'id2'])
 
 Підтримувані типи записів:
 - book, inbook (книги та частини книг)

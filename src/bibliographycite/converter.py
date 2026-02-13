@@ -15,7 +15,6 @@ class BibTeXToDSTUConverter:
     def __init__(self):
         self.parser = BibTexParser(common_strings=True)
         self.parser.ignore_nonstandard_types = False
-        self.parser.expect_multiple_parse = True
 
     def parse_bibtex_file(self, filepath: str) -> List[Dict]:
         """Парсит BibTeX файл и возвращает список записей"""
@@ -38,6 +37,54 @@ class BibTeXToDSTUConverter:
             if formatted:
                 formatted_entries.append(formatted)
         return formatted_entries
+
+    def _filter_entries_by_id(self, entries: List[Dict], selected_ids: List[str]) -> List[Dict]:
+        """Фильтрует записи по указанным ID
+
+        Args:
+            entries: Список всех записей BibTeX
+            selected_ids: Список ID записей для отбора
+
+        Returns:
+            Отфильтрованный список записей
+        """
+        if not selected_ids:
+            return entries
+
+        # Нормализуем ID для поиска (убираем регистр и пробелы)
+        normalized_ids = [id_str.strip().lower() for id_str in selected_ids]
+
+        filtered_entries = []
+        for entry in entries:
+            entry_id = entry.get('ID', '').strip().lower()
+            if entry_id in normalized_ids:
+                filtered_entries.append(entry)
+
+        return filtered_entries
+
+    def get_entry_ids_from_file(self, filepath: str) -> List[str]:
+        """Получает список всех ID записей из BibTeX файла
+
+        Args:
+            filepath: Путь к BibTeX файлу
+
+        Returns:
+            Список ID записей
+        """
+        entries = self.parse_bibtex_file(filepath)
+        return [entry.get('ID', '') for entry in entries if entry.get('ID')]
+
+    def get_entry_ids_from_string(self, bibtex_string: str) -> List[str]:
+        """Получает список всех ID записей из строки BibTeX
+
+        Args:
+            bibtex_string: Строка в формате BibTeX
+
+        Returns:
+            Список ID записей
+        """
+        entries = self.parse_bibtex_string(bibtex_string)
+        return [entry.get('ID', '') for entry in entries if entry.get('ID')]
 
     def _finalize_entry(self, parts: List[str]) -> str:
         """Финализирует запись, объединяя части и добавляя точку в конце"""
@@ -1532,24 +1579,50 @@ class BibTeXToDSTUConverter:
 
         return date_string
 
-    def convert_file_to_list(self, filepath: str) -> List[str]:
-        """Конвертирует BibTeX файл в список отформатированных строк DSTU"""
+    def convert_file_to_list(self, filepath: str, selected_ids: Optional[List[str]] = None) -> List[str]:
+        """Конвертирует BibTeX файл в список отформатированных строк DSTU
+
+        Args:
+            filepath: Путь к BibTeX файлу
+            selected_ids: Список ID записей для конвертации. Если None, конвертирует все записи.
+        """
         entries = self.parse_bibtex_file(filepath)
+        if selected_ids:
+            entries = self._filter_entries_by_id(entries, selected_ids)
         return self.convert_entries(entries)
 
-    def convert_string_to_list(self, bibtex_string: str) -> List[str]:
-        """Конвертирует строку BibTeX в список отформатированных строк DSTU"""
+    def convert_string_to_list(self, bibtex_string: str, selected_ids: Optional[List[str]] = None) -> List[str]:
+        """Конвертирует строку BibTeX в список отформатированных строк DSTU
+
+        Args:
+            bibtex_string: Строка в формате BibTeX
+            selected_ids: Список ID записей для конвертации. Если None, конвертирует все записи.
+        """
         entries = self.parse_bibtex_string(bibtex_string)
+        if selected_ids:
+            entries = self._filter_entries_by_id(entries, selected_ids)
         return self.convert_entries(entries)
 
-    def convert_file_to_string(self, filepath: str, numbered: bool = True) -> str:
-        """Конвертирует BibTeX файл в одну строку с библиографическим списком"""
-        entries = self.convert_file_to_list(filepath)
+    def convert_file_to_string(self, filepath: str, numbered: bool = True, selected_ids: Optional[List[str]] = None) -> str:
+        """Конвертирует BibTeX файл в одну строку с библиографическим списком
+
+        Args:
+            filepath: Путь к BibTeX файлу
+            numbered: Добавлять нумерацию к записям
+            selected_ids: Список ID записей для конвертации. Если None, конвертирует все записи.
+        """
+        entries = self.convert_file_to_list(filepath, selected_ids)
         return self._format_bibliography_list(entries, numbered)
 
-    def convert_string_to_formatted_string(self, bibtex_string: str, numbered: bool = True) -> str:
-        """Конвертирует строку BibTeX в отформатированный библиографический список"""
-        entries = self.convert_string_to_list(bibtex_string)
+    def convert_string_to_formatted_string(self, bibtex_string: str, numbered: bool = True, selected_ids: Optional[List[str]] = None) -> str:
+        """Конвертирует строку BibTeX в отформатированный библиографический список
+
+        Args:
+            bibtex_string: Строка в формате BibTeX
+            numbered: Добавлять нумерацию к записям
+            selected_ids: Список ID записей для конвертации. Если None, конвертирует все записи.
+        """
+        entries = self.convert_string_to_list(bibtex_string, selected_ids)
         return self._format_bibliography_list(entries, numbered)
 
     def _format_bibliography_list(self, entries: List[str], numbered: bool = True) -> str:
