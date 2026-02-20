@@ -4,6 +4,7 @@
 import re
 from typing import List, Dict, Optional
 import bibtexparser
+from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bparser import BibTexParser
 
 
@@ -16,11 +17,11 @@ class BibTeXToDSTUConverter:
         self.parser = BibTexParser(common_strings=True)
         self.parser.ignore_nonstandard_types = False
 
-    def parse_bibtex_file(self, filepath: str) -> List[Dict]:
-        """Парсит BibTeX файл и возвращает список записей"""
+    def parse_bibtex_file(self, filepath: str) -> BibDatabase:
+        """Парсит BibTeX файл и возвращает базу данных библиографии"""
         with open(filepath, 'r', encoding='utf-8') as bibfile:
             bib_database = bibtexparser.load(bibfile, self.parser)
-        return bib_database.entries
+        return bib_database
 
     def parse_bibtex_string(self, bibtex_string: str) -> List[Dict]:
         """Парсит строку BibTeX и возвращает список записей"""
@@ -1679,6 +1680,18 @@ class BibTeXToDSTUConverter:
 
         return date_string
 
+    def convert_dict_to_list(self, bibtex_dict: Dict[str, Dict], selected_ids: Optional[List[str]] = None) -> List[str]:
+        """Конвертирует словарь с записями BibTeX в список отформатированных строк DSTU
+
+        Args:
+            bibtex_dict: Словарь, где ключ - ID записи, а значение - словарь полей записи
+            selected_ids: Список ID записей для конвертации. Если None, конвертирует все записи.
+        """
+        entries = list(bibtex_dict.values())
+        if selected_ids:
+            entries = self._filter_entries_by_id(entries, selected_ids)
+        return self.convert_entries(entries)
+
     def convert_file_to_list(self, filepath: str, selected_ids: Optional[List[str]] = None) -> List[str]:
         """Конвертирует BibTeX файл в список отформатированных строк DSTU
 
@@ -1686,7 +1699,7 @@ class BibTeXToDSTUConverter:
             filepath: Путь к BibTeX файлу
             selected_ids: Список ID записей для конвертации. Если None, конвертирует все записи.
         """
-        entries = self.parse_bibtex_file(filepath)
+        entries = self.parse_bibtex_file(filepath).entries
         if selected_ids:
             entries = self._filter_entries_by_id(entries, selected_ids)
         return self.convert_entries(entries)
