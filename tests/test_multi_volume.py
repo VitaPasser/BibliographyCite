@@ -13,7 +13,7 @@ class TestDSTU_D2_MultiVolume(unittest.TestCase):
         bibtex = """@book{encyclopedia2016,
             title = {Енциклопедія рослин},
             editor = {Деркач, І. М. and others},
-            editortype = {редкол.},
+            editortype = {редкол. all},
             publisher = {ЦУЛ},
             year = {2016},
             address = {Київ},
@@ -21,7 +21,7 @@ class TestDSTU_D2_MultiVolume(unittest.TestCase):
             pages = {812}
         }"""
         result = self.converter.convert_string_to_list(bibtex)[0]
-        expected = "Енциклопедія рослин / редкол.: І. М. Деркач та ін. Київ : ЦУЛ, 2016. Т. 8. 812 с."
+        expected = "Енциклопедія рослин / редкол. : І. М. Деркач та ін. Київ : ЦУЛ, 2016. Т. 8. 812 с."
         self.assertEqual(result, expected)
 
     def test_d2_punkt_2(self):

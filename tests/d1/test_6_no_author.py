@@ -107,6 +107,7 @@ class TestDSTU_D1_6_NoAuthor(unittest.TestCase):
             type = {зб. наук. пр.},
             editor = {Марценюк, П. М. and others},
             editortype = {редкол. all},
+            editoraftertype = {відп.},
             publisher = {Ін-т всесвітньої історії НАН України},
             year = {2017},
             address = {Київ},

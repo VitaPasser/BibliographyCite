@@ -398,31 +398,17 @@ class BibTeXToDSTUConverter:
 
         if editor and author_count >= 1 and author_count <= 3 and not title_has_volume:
             editors = [e.strip() for e in editor.split(' and ')]
+            editors = [e for e in editors if e.lower() != 'others']
+            etype = self._get_editor_type(entry)
 
-            if 'заг. наук. ред.' in note:
-                formatted_editors = [self._format_author_inverted(e) for e in editors]
-                formatted_editor = ', '.join(formatted_editors)
-                parts.append(f"/ заг. наук. ред. {formatted_editor}")
-            elif 'голов. ред.' in note:
-                formatted_editors = [self._format_author_inverted(e) for e in editors]
-                formatted_editor = ', '.join(formatted_editors)
-                parts.append(f"/ голов. ред. {formatted_editor}")
-            elif 'ред.' in note:
-                formatted_editors = [self._format_author_inverted(e) for e in editors]
-                formatted_editor = ', '.join(formatted_editors)
-                parts.append(f"/ ред. {formatted_editor}")
-            elif 'ed. by' in note:
-                formatted_editors = [self._format_author_inverted(e) for e in editors]
-                formatted_editor = ', '.join(formatted_editors)
-                parts.append(f"/ ed. by {formatted_editor}")
-            elif is_english:
-                formatted_editors = [self._format_author_inverted(e) for e in editors]
-                formatted_editor = ', '.join(formatted_editors)
-                parts.append(f"/ ed. by {formatted_editor}")
-            else:
-                formatted_editors = [self._format_author_inverted(e) for e in editors]
-                formatted_editor = ', '.join(formatted_editors)
-                parts.append(f"/ ред. {formatted_editor}")
+            if not etype and is_english:
+                etype = 'ed. by'
+            elif not etype:
+                etype = 'ред.'
+
+            formatted_editors = [self._format_author_inverted(e) for e in editors]
+            formatted_editor = ', '.join(formatted_editors)
+            parts.append(f"/ {etype} {formatted_editor}")
 
         elif editor and (author_count == 4 or author_count >= 5) and not title_has_volume:
             # Обработка редакторов для 4+ авторов
@@ -432,8 +418,10 @@ class BibTeXToDSTUConverter:
             # Обработка редакторов без авторов
             # Сначала проверяем, есть ли note с организацией (не является типом редактора)
             editor_types = ['редкол.', 'заг. ред.', 'ред.', 'упоряд.', 'уклад.', 'голов. ред.']
+            editortype = entry.get('editortype', '').strip()
             is_volume_note = note and ('у ' in note and 'т.' in note)
-            has_editor_type = note and any(keyword in note.lower() for keyword in editor_types)
+            has_editor_type = (editortype or
+                               (note and any(keyword in note.lower() for keyword in editor_types)))
 
             if note and not has_editor_type and not is_volume_note:
                 # Note содержит организацию
@@ -447,10 +435,13 @@ class BibTeXToDSTUConverter:
                         parts.append(f"; за заг. ред. {editor_name}")
             elif is_volume_note and editor:
                 # Для багатотомных изданий: название уже содержит том info, нужно добавить редактора
-                # Note будет голов. ред., заг. ред. и т.д.
-                self._handle_editors_no_author(entry, parts, "голов. ред.")  # По умолчанию для энциклопедий
+                etype = self._get_editor_type(entry)
+                if not etype:
+                    etype = 'голов. ред.'
+                self._handle_editors_no_author(entry, parts, etype)
             else:
-                self._handle_editors_no_author(entry, parts, note)
+                etype = self._get_editor_type(entry)
+                self._handle_editors_no_author(entry, parts, etype if etype else note)
         elif not editor and author_count == 0 and note:
             # Нет авторов и редакторов, но есть note с информацией
             if 'упоряд.' in note or 'уклад.' in note:
@@ -559,14 +550,10 @@ class BibTeXToDSTUConverter:
         has_others = any(e.lower() == 'others' for e in editors_list)
         editors_list = [e for e in editors_list if e.lower() != 'others']
 
-        # Определяем тип редактора из note или используем "заг. ред." по умолчанию
-        editor_type = "заг. ред."
-        if 'заг. наук. ред.' in note:
-            editor_type = "заг. наук. ред."
-        elif 'голов. ред.' in note:
-            editor_type = "голов. ред."
-        elif 'ред.' in note and 'заг. ред.' not in note:
-            editor_type = "ред."
+        # Определяем тип редактора из editortype (приоритет) или note
+        editor_type = self._get_editor_type(entry)
+        if not editor_type:
+            editor_type = "заг. ред."
 
         if has_others and editors_list:
             first_editor = self._format_author_inverted(editors_list[0])
@@ -582,35 +569,59 @@ class BibTeXToDSTUConverter:
             parts.append(f"; {editor_type} {', '.join(formatted_editors)}")
 
     def _handle_editors_no_author(self, entry: Dict, parts: List[str], note: str):
-        """Обрабатывает редакторов когда нет авторов"""
+        """Обрабатывает редакторов когда нет авторов.
+
+        note — уже нормализованный тип (из _get_editor_type) или сырой note.
+        """
         editor = entry.get('editor', '')
 
         if not editor:
             # Проверяем note на наличие информации типа "упоряд. В. Олексик"
-            if note and ('упоряд.' in note or 'уклад.' in note):
-                parts.append(f"/ {note}")
+            raw_note = entry.get('note', '')
+            if raw_note and ('упоряд.' in raw_note or 'уклад.' in raw_note):
+                parts.append(f"/ {raw_note}")
             return
 
-        # Парсим note для определения типа редактора
-        if 'редкол.' in note.lower():
-            # Редакционная коллегия
-            editors_list = [e.strip() for e in editor.split(' and ')]
-            has_others = any(e.lower() == 'others' for e in editors_list)
-            editors_list = [e for e in editors_list if e.lower() != 'others']
+        editors_list = [e.strip() for e in editor.split(' and ')]
+        has_others = any(e.lower() == 'others' for e in editors_list)
+        editors_list = [e for e in editors_list if e.lower() != 'others']
 
+        # Получаем тип редактора. note уже может быть нормализованным типом или пустым.
+        etype = note  # передали уже нормализованный тип
+
+        # Если пустой — определяем из editortype/note записи
+        if not etype:
+            etype = self._get_editor_type(entry)
+
+        # Поддержка нескольких типов редакторов (например "заг. ред. and уклад.")
+        per_types = self._get_per_editor_types(entry)
+        editortype_raw = entry.get('editortype', '').strip()
+        has_multiple_types = ' and ' in editortype_raw
+
+        if has_multiple_types and len(per_types) >= 2 and not has_others:
+            # Каждый редактор имеет свой тип: «/ заг. ред. В. І. Гарапко, уклад. А. І. Гарапко»
+            parts_str = []
+            for i, (ed, et) in enumerate(zip(editors_list, per_types)):
+                fmt = self._format_author_inverted(ed)
+                parts_str.append(f"{et} {fmt}")
+            parts.append(f"/ {', '.join(parts_str)}")
+            return
+
+        if 'редкол' in etype.lower():
+            raw_note = entry.get('note', '')
+            is_for_all = 'all' in editortype_raw.lower()
             if len(editors_list) == 1:
-                # Используем инвертированный формат (І. О. Фамілія)
                 editor_name = self._format_author_inverted(editors_list[0])
-                if has_others or 'та ін.' in note:
-                    # Парсим дополнительную информацию из note
-                    note_extra = note.replace('редкол.', '').replace(';', '').strip()
-                    if 'відп. ред.' in note_extra:
-                        parts.append(f"/ редкол. : {editor_name} (відп. ред.) та ін.")
+                if has_others:
+                    editoraftertype = entry.get('editoraftertype', '').strip()
+                    if 'відп.' in editoraftertype or 'відп. ред.' in editoraftertype:
+                        editor_name = f'{editor_name} (відп. ред.)'
+                    if is_for_all:
+                        parts.append(f"/ редкол. : {editor_name} та ін.")
                     else:
-                        parts.append(f"/ редкол.: {editor_name} та ін.")
+                        parts.append(f"/ редкол. {editor_name} та ін.")
                 else:
-                    # Проверяем, есть ли дополнительная информация в note
-                    has_extra_info = ';' in note and 'відп. ред.' in note
+                    has_extra_info = ';' in raw_note and 'відп. ред.' in raw_note
                     if has_extra_info:
                         parts.append(f"/ редкол. : {editor_name}")
                     else:
@@ -619,11 +630,7 @@ class BibTeXToDSTUConverter:
                 first_editor = self._format_author_inverted(editors_list[0])
                 parts.append(f"/ редкол.: {first_editor} та ін.")
 
-        elif 'голов. ред.' in note:
-            # Обработка главного редактора
-            editors_list = [e.strip() for e in editor.split(' and ')]
-            editors_list = [e for e in editors_list if e.lower() != 'others']
-
+        elif 'голов. ред.' in etype:
             if len(editors_list) == 1:
                 editor_name = self._format_author_inverted(editors_list[0])
                 parts.append(f"/ голов. ред. {editor_name}")
@@ -631,36 +638,35 @@ class BibTeXToDSTUConverter:
                 formatted_editors = [self._format_author_inverted(e) for e in editors_list]
                 parts.append(f"/ голов. ред. : {', '.join(formatted_editors)}")
 
-        elif 'заг. ред.' in note:
-            editors_list = [e.strip() for e in editor.split(' and ')]
-            editors_list = [e for e in editors_list if e.lower() != 'others']
-
+        elif 'заг. наук. ред.' in etype:
             if len(editors_list) == 1:
-                # Используем инвертированный формат (І. О. Фамілія)
+                editor_name = self._format_author_inverted(editors_list[0])
+                parts.append(f"/ заг. наук. ред. {editor_name}")
+            else:
+                formatted_editors = [self._format_author_inverted(e) for e in editors_list]
+                parts.append(f"/ заг. наук. ред. : {', '.join(formatted_editors)}")
+
+        elif 'заг. ред.' in etype:
+            raw_note = entry.get('note', '')
+            if len(editors_list) == 1:
                 editor_name = self._format_author_inverted(editors_list[0])
                 # Проверяем, есть ли "уклад." в note
-                if 'уклад.' in note or 'уклад. :' in note:
-                    # Извлекаем информацию о составителе
-                    compiler_info = self._extract_compiler_from_note(note)
+                if 'уклад.' in raw_note or 'уклад. :' in raw_note:
+                    compiler_info = self._extract_compiler_from_note(raw_note)
                     if compiler_info:
-                        parts.append(f"/ {compiler_info} ; відп. за вип. {editor_name}" if 'відп. за вип.' in note else f"/ заг. ред. {editor_name}; {compiler_info}")
+                        if 'відп. за вип.' in raw_note:
+                            parts.append(f"/ {compiler_info} ; відп. за вип. {editor_name}")
+                        else:
+                            parts.append(f"/ заг. ред. {editor_name}; {compiler_info}")
                     else:
                         parts.append(f"/ заг. ред. {editor_name}")
-                elif 'за заг. ред.' in note:
-                    # Если в note явно написано "за заг. ред."
-                    parts.append(f"/ заг. ред. {editor_name}")
                 else:
-                    # По умолчанию для книг без авторов используем "заг. ред." без "за"
                     parts.append(f"/ заг. ред. {editor_name}")
             else:
-                # Несколько редакторов
                 formatted_editors = [self._format_author_inverted(e) for e in editors_list]
                 parts.append(f"/ заг. ред. : {', '.join(formatted_editors)}")
 
-        elif 'ред.' in note:
-            editors_list = [e.strip() for e in editor.split(' and ')]
-            editors_list = [e for e in editors_list if e.lower() != 'others']
-
+        elif 'ред.' in etype:
             if len(editors_list) == 1:
                 editor_name = self._format_author_inverted(editors_list[0])
                 parts.append(f"/ ред. {editor_name}")
@@ -668,19 +674,118 @@ class BibTeXToDSTUConverter:
                 formatted_editors = [self._format_author_inverted(e) for e in editors_list]
                 parts.append(f"/ ред. : {', '.join(formatted_editors)}")
 
-        elif 'упоряд.' in note or 'уклад.' in note:
-            # Обрабатываем составителей
-            editors_list = [e.strip() for e in editor.split(' and ')]
-            editors_list = [e for e in editors_list if e.lower() != 'others']
-
+        elif 'упоряд.' in etype or 'уклад.' in etype:
             if editors_list:
                 compiler = self._format_single_author(editors_list[0])
-                parts.append(f"/ упоряд. {compiler}")
+                keyword = 'упоряд.' if 'упоряд.' in etype else 'уклад.'
+                parts.append(f"/ {keyword} {compiler}")
             else:
-                # Если редакторов нет, пытаемся извлечь из note
-                compiler_info = self._extract_compiler_from_note(note)
+                compiler_info = self._extract_compiler_from_note(entry.get('note', ''))
                 if compiler_info:
                     parts.append(f"/ {compiler_info}")
+
+        else:
+            # Неизвестный тип — используем "ред." по умолчанию
+            if editors_list:
+                if len(editors_list) == 1:
+                    editor_name = self._format_author_inverted(editors_list[0])
+                    parts.append(f"/ ред. {editor_name}")
+                else:
+                    formatted_editors = [self._format_author_inverted(e) for e in editors_list]
+                    parts.append(f"/ ред. : {', '.join(formatted_editors)}")
+
+    def _normalize_editor_type(self, raw: str) -> str:
+        """Нормализует одно значение типа редактора.
+
+        Убирает префикс «за » в начале (за ред. → ред., за заг. ред. → заг. ред.),
+        а также приводит к каноническому виду.
+        """
+        t = raw.strip()
+        # Убираем префикс «за » в начале
+        if t.lower().startswith('за '):
+            t = t[3:].strip()
+
+        tl = t.lower()
+        if 'редкол' in tl:
+            return 'редкол.'
+        if 'заг. наук. ред.' in tl:
+            return 'заг. наук. ред.'
+        if 'голов. ред.' in tl:
+            return 'голов. ред.'
+        if 'заг. ред.' in tl:
+            return 'заг. ред.'
+        if 'упоряд. та відп. ред.' in tl or 'упоряд. і відп. ред.' in tl:
+            return t  # сохраняем дословно
+        if 'відпов. за вип.' in tl or 'відп. за вип.' in tl:
+            return t
+        if 'уклад.' in tl:
+            return 'уклад.'
+        if 'упоряд.' in tl:
+            return 'упоряд.'
+        if 'ред.' in tl:
+            return 'ред.'
+        if 'ed. by' in tl:
+            return 'ed. by'
+        return t
+
+    def _get_editor_type(self, entry: Dict) -> str:
+        """Возвращает тип редактора из editortype (приоритет) или note.
+
+        Нормализует значения: убирает префикс «за », приводит к канонической форме.
+        Берёт первое значение, если editortype содержит несколько (через ' and ').
+        """
+        editortype = entry.get('editortype', '').strip()
+        note = entry.get('note', '').strip()
+
+        # Берём первое значение editortype
+        raw = editortype.split(' and ')[0].strip() if editortype else ''
+
+        if raw:
+            return self._normalize_editor_type(raw)
+
+        # Фолбек на note
+        if 'редкол.' in note:
+            return 'редкол.'
+        if 'заг. наук. ред.' in note:
+            return 'заг. наук. ред.'
+        if 'голов. ред.' in note:
+            return 'голов. ред.'
+        if 'заг. ред.' in note or 'за заг. ред.' in note:
+            return 'заг. ред.'
+        if 'ред.' in note:
+            return 'ред.'
+        return ''
+
+    def _get_per_editor_types(self, entry: Dict) -> list:
+        """Возвращает список нормализованных типов для каждого редактора.
+
+        editortype может содержать несколько значений через ' and ', каждое из которых
+        соответствует отдельному редактору из поля editor (тоже разделённых ' and ').
+        Префикс «за » убирается из каждого значения.
+
+        Примеры:
+          editortype = «заг. ред. and уклад.»  → ['заг. ред.', 'уклад.']
+          editortype = «за ред.»               → ['ред.', 'ред.', ...]  (для всех ред-ров)
+          editortype = «редкол. all»            → ['редкол.', 'редкол.', ...]
+        """
+        editortype = entry.get('editortype', '').strip()
+        editor = entry.get('editor', '').strip()
+        if not editor:
+            return []
+        editors_raw = [e.strip() for e in editor.split(' and ') if e.strip().lower() != 'others']
+        n = len(editors_raw)
+
+        if ' and ' in editortype:
+            raw_types = [t.strip() for t in editortype.split(' and ')]
+            normalized = [self._normalize_editor_type(t) for t in raw_types]
+            # Дополняем до количества редакторов последним значением
+            while len(normalized) < n:
+                normalized.append(normalized[-1] if normalized else 'ред.')
+            return normalized[:n]
+        else:
+            # Один тип для всех редакторов
+            single = self._get_editor_type(entry)
+            return [single] * n
 
     def _extract_compiler_from_note(self, note: str) -> str:
         """Извлекает информацию о составителе из note"""
@@ -945,23 +1050,30 @@ class BibTeXToDSTUConverter:
             note = entry.get('note', '')
             year = entry.get('year', '')
             editor = entry.get('editor', '')
+            editortype = entry.get('editortype', '').strip()
 
-            # Если note содержит информацию о дате и месте
-            if note and ('р.' in note or 'р,' in note or 'Ukraine' in note or '2023' in note or '2024' in note):
+            # Определяем, является ли note информацией о дате/месте конференции
+            note_is_date = note and ('р.' in note or 'р,' in note or 'Ukraine' in note
+                                     or re.search(r'\b20\d\d\b', note))
+            # Определяем, является ли editortype/note типом редактора
+            editor_keywords = ['відпов. за вип.', 'відп. за вип.', 'ред.', 'упоряд.']
+            note_is_editor = note and any(k in note for k in editor_keywords)
+            editortype_is_editor = editortype and any(k in editortype for k in editor_keywords)
+
+            if note_is_date:
                 # Для английских конференций используем точку, для украинских - запятую
-                is_english = self._is_english(entry)
                 separator = ". " if is_english else ", "
                 conf_text = f"{booktitle}{separator}{note}"
                 parts.append(conf_text)
-            elif note and ('відпов. за вип.' in note or 'відп. за вип.' in note):
-                # note содержит информацию о редакторе
-                if editor:
-                    editors_list = [e.strip() for e in editor.split(' and ')]
-                    editors_list = [e for e in editors_list if e.lower() != 'others']
-                    if editors_list:
-                        editor_name = self._format_single_author(editors_list[0])
-                        conf_text = f"{booktitle} / {note} {editor_name}"
-                        parts.append(conf_text)
+            elif (note_is_editor or editortype_is_editor) and editor:
+                # note или editortype содержит информацию о редакторе
+                editors_list = [e.strip() for e in editor.split(' and ')]
+                editors_list = [e for e in editors_list if e.lower() != 'others']
+                if editors_list:
+                    editor_name = self._format_single_author(editors_list[0])
+                    etype = self._get_editor_type(entry) or (note if note_is_editor else 'ред.')
+                    conf_text = f"{booktitle} / {etype} {editor_name}"
+                    parts.append(conf_text)
                 else:
                     parts.append(booktitle)
             else:
@@ -1380,27 +1492,15 @@ class BibTeXToDSTUConverter:
             if editor:
                 # Используем инвертированный формат для редакторов в inbook
                 editors = [e.strip() for e in editor.split(' and ')]
+                editors = [e for e in editors if e.lower() != 'others']
                 formatted_editors = [self._format_author_inverted(e) for e in editors]
                 formatted_editor = ', '.join(formatted_editors)
 
-                if 'упоряд. та відп. ред.' in note or 'упоряд. і відп. ред.' in note:
-                    parts.append(f"/ упоряд. та відп. ред. {formatted_editor}")
-                elif 'заг. наук. ред.' in note:
-                    parts.append(f"/ заг. наук. ред. {formatted_editor}")
-                elif 'заг. ред.' in note:
-                    parts.append(f"/ заг. ред. {formatted_editor}")
-                elif 'голов. ред.' in note:
-                    parts.append(f"/ голов. ред. {formatted_editor}")
-                elif 'ред.' in note and 'за ред.' not in note:
-                    parts.append(f"/ ред. {formatted_editor}")
-                elif 'за ред.' in note:
-                    parts.append(f"/ ред. {formatted_editor}")
-                elif 'ed. by' in note:
-                    parts.append(f"/ ed. by {formatted_editor}")
-                elif is_english:
-                    parts.append(f"/ ed. by {formatted_editor}")
-                else:
-                    parts.append(f"/ ред. {formatted_editor}")
+                etype = self._get_editor_type(entry)
+                if not etype:
+                    etype = 'ed. by' if is_english else 'ред.'
+
+                parts.append(f"/ {etype} {formatted_editor}")
 
         # Издательская информация
         address = entry.get('address', '')
