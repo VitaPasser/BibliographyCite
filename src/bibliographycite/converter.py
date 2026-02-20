@@ -185,6 +185,20 @@ class BibTeXToDSTUConverter:
             et_al = ' et al.' if is_english else ' та ін.'
             return formatted_authors[0] + et_al, author_count
 
+    def _split_author_no_comma(self, parts: list) -> tuple[str, list]:
+        """Определяет фамилию и остальные имена для автора без запятой.
+
+        Если все части — длинные слова без точек (формат «Прізвище Ім'я По-батькові»),
+        то первое слово считается фамилией.
+        Иначе (стандартный BibTeX «FirstName LastName») — последнее слово фамилия.
+        """
+        if len(parts) >= 2 and all(len(p.replace('.', '')) > 1 and '.' not in p for p in parts):
+            # «Прізвище Ім'я [По-батькові]»
+            return parts[0], parts[1:]
+        else:
+            # BibTeX стандарт: «FirstName(s) LastName»
+            return parts[-1], parts[:-1]
+
     def _format_single_author(self, author: str) -> str:
         """Форматирует одного автора: Фамилия И. О."""
         author = ' '.join(author.split())
@@ -206,8 +220,7 @@ class BibTeXToDSTUConverter:
         else:
             parts = author.split()
             if len(parts) >= 2:
-                lastname = parts[-1]
-                firstnames = parts[:-1]
+                lastname, firstnames = self._split_author_no_comma(parts)
                 initials = [name[0].upper() + '.' for name in firstnames if name]
                 return f"{lastname} {' '.join(initials)}"
             return author
@@ -233,8 +246,7 @@ class BibTeXToDSTUConverter:
         else:
             parts = author.split()
             if len(parts) >= 2:
-                lastname = parts[-1]
-                firstnames = parts[:-1]
+                lastname, firstnames = self._split_author_no_comma(parts)
                 initials = [name[0].upper() + '.' for name in firstnames if name]
                 if initials:
                     return f"{' '.join(initials)} {lastname}"
@@ -263,8 +275,7 @@ class BibTeXToDSTUConverter:
         else:
             parts = author.split()
             if len(parts) >= 2:
-                lastname = parts[-1]
-                firstnames = parts[:-1]
+                lastname, firstnames = self._split_author_no_comma(parts)
                 initials = [name[0].upper() + '.' for name in firstnames if name]
                 if initials:
                     genitive_lastname = self._to_genitive(lastname)

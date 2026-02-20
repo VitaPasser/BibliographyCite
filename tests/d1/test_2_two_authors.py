@@ -88,7 +88,7 @@ class TestDSTU_D1_2_TwoAuthors(unittest.TestCase):
     def test_d1_2_punkt_6(self):
         """Д.1.2.6: Бутенко М. П., Качур В. П."""
         bibtex = """@book{butenko2017,
-            author = {Бутенко, М. П. and Качур, В. П.},
+            author = {Бутенко Микола Петрович and Качур, В. П.},
             title = {Психологія},
             type = {навч. посіб.},
             editor = {Дутко, М. П.},
