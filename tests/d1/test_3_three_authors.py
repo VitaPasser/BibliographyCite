@@ -45,7 +45,6 @@ class TestDSTU_D1_3_ThreeAuthors(unittest.TestCase):
             title = {Психологія},
             type = {навч. посіб.},
             editor = {Дутко, М. П.},
-            note = {за ред.},
             publisher = {ЦУЛ},
             year = {2017},
             address = {Київ},

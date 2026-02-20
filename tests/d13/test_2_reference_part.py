@@ -15,7 +15,7 @@ class TestDSTU_D13_2_ReferencePart(unittest.TestCase):
             title = {Право інтелектуальної власності},
             booktitle = {Великий енциклопедичний юридичний словник},
             editor = {Шемшученко, Ю. С.},
-            note = {ред.},
+            editortype = {ред.},
             year = {2007},
             address = {Київ},
             pages = {683}
@@ -31,7 +31,6 @@ class TestDSTU_D13_2_ReferencePart(unittest.TestCase):
             title = {Інноваційні педагогічні технології},
             booktitle = {Основи педагогіки освіти : словник термінів},
             editor = {Дмитрук, Т. О.},
-            note = {ред.},
             year = {2014},
             address = {Київ},
             pages = {54--55}

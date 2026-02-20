@@ -14,7 +14,7 @@ class TestDSTU_D1_6_NoAuthor(unittest.TestCase):
             title = {30 років історичному факультету: історія та сьогодення (1986-2016)},
             type = {ювіл. вип.},
             editor = {Черепаня, В. В.},
-            note = {заг. ред.},
+            editortype = {заг. ред.},
             publisher = {ЗНУ},
             year = {2016},
             address = {Запоріжжя},
@@ -29,15 +29,15 @@ class TestDSTU_D1_6_NoAuthor(unittest.TestCase):
         bibtex = """@book{etnografiya2018,
             title = {Етнографія},
             type = {конспект лекцій},
-            editor = {Гарапко, В. І.},
-            note = {заг. ред.; уклад. А. І. Гарапко},
+            editor = {Гарапко, В. І. and Гарапко, А. І.},
+            editortype = {заг. ред. and уклад.},
             publisher = {ЦУЛ},
             year = {2018},
             address = {Київ},
             pages = {320}
         }"""
         result = self.converter.convert_string_to_list(bibtex)[0]
-        expected = "Етнографія : конспект лекцій / заг. ред. В. І. Гарапко; уклад. А. І. Гарапко. Київ : ЦУЛ, 2018. 320 с."
+        expected = "Етнографія : конспект лекцій / заг. ред. В. І. Гарапко, уклад. А. І. Гарапко. Київ : ЦУЛ, 2018. 320 с."
         self.assertEqual(result, expected)
 
     def test_d1_6_punkt_3(self):
@@ -46,7 +46,6 @@ class TestDSTU_D1_6_NoAuthor(unittest.TestCase):
             title = {Міжнародні відносини},
             type = {монографія},
             editor = {Березовський, М. А.},
-            note = {за ред.},
             publisher = {ЦУЛ},
             year = {2016},
             address = {Київ},
@@ -62,7 +61,7 @@ class TestDSTU_D1_6_NoAuthor(unittest.TestCase):
             title = {Міжнародні економічні відносини},
             type = {навч. посіб.},
             editor = {Бедрій, П. О. and Петренко, О. О.},
-            note = {за ред.},
+            editortype = {за ред.},
             publisher = {ОНУ},
             year = {2015},
             address = {Одеса},
@@ -77,7 +76,7 @@ class TestDSTU_D1_6_NoAuthor(unittest.TestCase):
         bibtex = """@book{tsyvilnyy2016,
             title = {Науково-практичний коментар Цивільного кодексу України},
             editor = {Тарнавський, Т. А.},
-            note = {за заг. ред.},
+            editortype = {за заг. ред.},
             publisher = {ЦУЛ},
             year = {2016},
             address = {Київ},
@@ -107,7 +106,7 @@ class TestDSTU_D1_6_NoAuthor(unittest.TestCase):
             title = {Освіта в Україні: виклики модернізації},
             type = {зб. наук. пр.},
             editor = {Марценюк, П. М. and others},
-            note = {редкол.; відп. ред.},
+            editortype = {редкол. all},
             publisher = {Ін-т всесвітньої історії НАН України},
             year = {2017},
             address = {Київ},

@@ -13,7 +13,7 @@ class TestDSTU_D2_MultiVolume(unittest.TestCase):
         bibtex = """@book{encyclopedia2016,
             title = {Енциклопедія рослин},
             editor = {Деркач, І. М. and others},
-            note = {редкол.},
+            editortype = {редкол.},
             publisher = {ЦУЛ},
             year = {2016},
             address = {Київ},

@@ -105,7 +105,7 @@ class TestDSTU_D1_1_SingleAuthor(unittest.TestCase):
             title = {Міжнародний маркетинг},
             type = {монографія},
             editor = {Марценюк, В. М.},
-            note = {за заг. наук. ред.},
+            editortype = {заг. наук. ред.},
             year = {2015},
             address = {Київ},
             pages = {374}
