@@ -47,7 +47,7 @@ class TestDSTU_D2_MultiVolume(unittest.TestCase):
             title = {Шевченківська енциклопедія},
             note = {у 6 т.},
             editor = {Жулинський, М. Г.},
-            publisher = {Ін-т літератури ім. Т. Г. Шевченка},
+            publisher = {Інститут літератури імені Т. Г. Шевченка},
             year = {2015},
             address = {Київ},
             volume = {6},

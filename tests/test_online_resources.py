@@ -63,3 +63,20 @@ class TestDSTU_D12_OnlineResources(unittest.TestCase):
         result = self.converter.convert_string_to_list(bibtex)[0]
         expected = "Хміль І. О. Шляхи подолання правового нігілізму в Україні. Вісник Запорізького національного університету. Юридичні науки. Запоріжжя, 2016. № 3. С. 20–27. – URL: http://ebooks.znu.edu.ua/files/Fakhovivydannya/vznu/juridichni/VestUr2015v3/5.pdf. (дата звернення: 15.11.2017)."
         self.assertEqual(result, expected)
+
+    def test_d12_punkt_5(self):
+        """Д.12.5: Куцкір Я. С., Махно Б. А., Борислав С. Г. — стаття з DOI"""
+        bibtex = """@article{kutsir2016,
+            author = {Куцкір, Я. С. and Махно, Б. А. and Борислав, С. Г.},
+            title = {Трансформація науково-педагогічної системи України протягом 90-х років ХХ століття: період переходу до ринку},
+            journal = {Наука та інновації},
+            year = {2016},
+            volume = {12},
+            number = {6},
+            pages = {6--14},
+            doi = {10.15407/scin12.06.006}
+        }"""
+        result = self.converter.convert_string_to_list(bibtex)[0]
+        expected = "Куцкір Я. С., Махно Б. А., Борислав С. Г. Трансформація науково-педагогічної системи України протягом 90-х років ХХ століття: період переходу до ринку. Наука та інновації. 2016. Т. 12, № 6. C. 6–14. DOI: https://doi.org/10.15407/scin12.06.006."
+        self.assertEqual(result, expected)
+

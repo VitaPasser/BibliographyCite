@@ -304,6 +304,39 @@ class BibTeXToDSTUConverter:
                 return lastname + 'а'
             return lastname
 
+    def _abbreviate_publisher(self, publisher: str) -> str:
+        """Скорочує повні назви видавництв/організацій згідно ДСТУ 3582:2013.
+
+        Наприклад:
+          «Інститут літератури імені Т. Г. Шевченка» → «Ін-т літератури ім. Т. Г. Шевченка»
+          «Національний університет «Одеська політехніка»» → «Нац. ун-т «Одес. політехніка»»
+        """
+        import re
+        p = publisher
+
+        # Порядок важен: сначала более длинные совпадения
+        replacements = [
+            (r'\bІнститут\b', 'Ін-т'),
+            (r'\bінститут\b', 'ін-т'),
+            (r'\bInstitute\b', 'Inst.'),
+            (r'\bімені\b', 'ім.'),
+            (r'\bіменi\b', 'ім.'),   # латинская i
+            (r'\bНаціональний університет\b', 'Нац. ун-т'),
+            (r'\bНаціональний\b', 'Нац.'),
+            (r'\bДержавний\b', 'Держ.'),
+            (r'\bУніверситет\b', 'ун-т'),
+            (r'\bуніверситет\b', 'ун-т'),
+            (r'\bАкадемія\b', 'акад.'),
+            (r'\bакадемія\b', 'акад.'),
+            (r'\bМіністерство\b', 'М-во'),
+            (r'\bміністерство\b', 'м-во'),
+        ]
+
+        for pattern, repl in replacements:
+            p = re.sub(pattern, repl, p)
+
+        return p
+
     def _format_book(self, entry: Dict) -> str:
         """Форматирует книгу согласно Д.1 DSTU 8302:2015"""
         parts = []
@@ -477,13 +510,10 @@ class BibTeXToDSTUConverter:
 
         publisher = entry.get('publisher', '')
         if publisher:
+            publisher = self._abbreviate_publisher(publisher)
             if address:
-                # Специальный случай для Шевченківської енциклопедії - без пробела
-                title = entry.get('title', '')
-                if 'Шевченківська енциклопедія' in title:
-                    publisher_parts.append(f": {publisher}")
-                # Для институтов - без пробела перед двоеточием
-                elif 'Ін-т' in publisher or 'Инст' in publisher:
+                # Для институтов и сокращённых названий - без лишнего пробела
+                if 'Ін-т' in publisher or 'ін-т' in publisher or 'ун-т' in publisher:
                     publisher_parts.append(f": {publisher}")
                 else:
                     publisher_parts.append(f" : {publisher}")
@@ -1439,6 +1469,7 @@ class BibTeXToDSTUConverter:
         # Используем publisher если есть, иначе institution
         org = publisher if publisher else institution
         if org:
+            org = self._abbreviate_publisher(org)
             pub_parts.append(f" : {org}" if address else org)
 
         if year:
@@ -1523,6 +1554,7 @@ class BibTeXToDSTUConverter:
         if address:
             pub_parts.append(address)
         if publisher:
+            publisher = self._abbreviate_publisher(publisher)
             pub_parts.append(f": {publisher}" if address else publisher)
         if year:
             pub_parts.append(f", {year}")
