@@ -52,13 +52,24 @@ class BibTeXToDSTUConverter:
         if not selected_ids:
             return entries
 
-        # Нормализуем ID для поиска (убираем регистр и пробелы)
-        normalized_ids = [id_str.strip().lower() for id_str in selected_ids]
+        # Индексируем записи по нормализованному ID для быстрого доступа.
+        entries_by_id = {
+            entry.get('ID', '').strip().lower(): entry
+            for entry in entries
+            if entry.get('ID')
+        }
 
+        # Сохраняем порядок первого упоминания selected_ids и убираем дубликаты.
         filtered_entries = []
-        for entry in entries:
-            entry_id = entry.get('ID', '').strip().lower()
-            if entry_id in normalized_ids:
+        seen_ids = set()
+        for id_str in selected_ids:
+            normalized_id = id_str.strip().lower()
+            if not normalized_id or normalized_id in seen_ids:
+                continue
+            seen_ids.add(normalized_id)
+
+            entry = entries_by_id.get(normalized_id)
+            if entry:
                 filtered_entries.append(entry)
 
         return filtered_entries

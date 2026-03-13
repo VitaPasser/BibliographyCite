@@ -126,3 +126,22 @@ class TestSelectiveConversion:
         result = self.converter.convert_string_to_list(self.sample_bibtex, selected_ids=selected_ids)
 
         assert len(result) == 2
+
+    def test_convert_string_with_selected_ids_preserves_selected_order(self):
+        """Порядок результата должен следовать порядку первого упоминания в selected_ids"""
+        selected_ids = ['article1', 'book2', 'book1']
+        result = self.converter.convert_string_to_list(self.sample_bibtex, selected_ids=selected_ids)
+
+        assert len(result) == 3
+        assert 'Статья первая' in result[0]
+        assert 'Вторая книга' in result[1]
+        assert 'Первая книга' in result[2]
+
+    def test_convert_string_with_selected_ids_uses_first_mention_for_duplicates(self):
+        """Дубликаты selected_ids не должны менять порядок и не дублируют запись"""
+        selected_ids = ['book2', 'book1', 'book2', 'book1']
+        result = self.converter.convert_string_to_list(self.sample_bibtex, selected_ids=selected_ids)
+
+        assert len(result) == 2
+        assert 'Вторая книга' in result[0]
+        assert 'Первая книга' in result[1]
