@@ -1,14 +1,7 @@
-"""
-Конвертер библиографических записей из формата BibTeX в формат DSTU 8302:2015
-Главный модуль для демонстрации работы
-"""
-
 from bibliographycite import BibTeXToDSTUConverter
 
 
 def main():
-    """Основная функция для демонстрации работы конвертера"""
-
     print("=" * 80)
     print("Конвертер BibTeX → DSTU 8302:2015")
     print("=" * 80)
@@ -16,7 +9,6 @@ def main():
 
     converter = BibTeXToDSTUConverter()
 
-    # Примеры различных типов записей
     sample_bibtex = """
     @book{dychkivska2018,
         author = {Дичківська, О. О.},
@@ -107,7 +99,6 @@ def main():
     print("-" * 80)
     print()
 
-    # Конвертуємо в список
     bibliography_list = converter.convert_string_to_list(sample_bibtex, ['zadereyko2022'])
 
     print("РЕЗУЛЬТАТ (ДСТУ 8302:2015):")
@@ -118,20 +109,16 @@ def main():
     print("-" * 80)
     print()
 
-    # Также можна отримать как одну строку
     formatted_string = converter.convert_string_to_formatted_string(sample_bibtex, numbered=True)
 
-    # Демонстрируем выборочную конвертацию по ID
     print("ПРИКЛАД ВИБІРКОВОЇ КОНВЕРТАЦІЇ:")
     print("-" * 80)
 
-    # Получаем все ID из строки
     all_ids = converter.get_entry_ids_from_string(sample_bibtex)
     print(f"Всього записів у прикладі: {len(all_ids)}")
     print(f"ID записів: {', '.join(all_ids)}")
     print()
 
-    # Конвертируем только выбранные записи
     selected_ids = ['martynenko2017', 'zadereyko2022']
     selected_entries = converter.convert_string_to_list(sample_bibtex, selected_ids=selected_ids)
 

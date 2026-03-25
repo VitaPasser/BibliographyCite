@@ -1,5 +1,5 @@
 """
-Конвертер BibTeX в формат DSTU 8302:2015
+Конвертер BibTeX у формат DSTU 8302:2015
 """
 import re
 from typing import List, Dict, Optional
@@ -10,7 +10,7 @@ from bibtexparser.bparser import BibTexParser
 
 class BibTeXToDSTUConverter:
     """
-    Конвертер библиографических записей из формата BibTeX в формат DSTU 8302:2015.
+    Конвертер бібліографічних записей з формату BibTeX в формат DSTU 8302:2015.
     """
 
     def __init__(self):
@@ -18,20 +18,20 @@ class BibTeXToDSTUConverter:
         self.parser.ignore_nonstandard_types = False
 
     def parse_bibtex_file(self, filepath: str) -> BibDatabase:
-        """Парсит BibTeX файл и возвращает базу данных библиографии"""
+        """Парсить BibTeX файл і повертає базу даних бібліографії"""
         with open(filepath, 'r', encoding='utf-8') as bibfile:
             bib_database = bibtexparser.load(bibfile, self.parser)
         return bib_database
 
     def parse_bibtex_string(self, bibtex_string: str) -> List[Dict]:
-        """Парсит строку BibTeX и возвращает список записей"""
+        """Парсить рядок BibTeX і повертає список записів"""
         parser = BibTexParser(common_strings=True)
         parser.ignore_nonstandard_types = False
         bib_database = bibtexparser.loads(bibtex_string, parser)
         return bib_database.entries
 
     def convert_entries(self, entries: List[Dict]) -> List[str]:
-        """Конвертирует список BibTeX записей в формат DSTU 8302:2015"""
+        """Конвертує список BibTeX записів в формат DSTU 8302:2015"""
         formatted_entries = []
         for entry in entries:
             formatted = self._convert_entry(entry)
@@ -40,26 +40,26 @@ class BibTeXToDSTUConverter:
         return formatted_entries
 
     def _filter_entries_by_id(self, entries: List[Dict], selected_ids: List[str]) -> List[Dict]:
-        """Фильтрует записи по указанным ID
+        """Фільтрує записи по вказаним ID
 
         Args:
-            entries: Список всех записей BibTeX
-            selected_ids: Список ID записей для отбора
+            entries: Список всіх записів BibTeX
+            selected_ids: Список ID записів для відбору
 
         Returns:
-            Отфильтрованный список записей
+            Відфільтрований список записів
         """
         if not selected_ids:
             return entries
 
-        # Индексируем записи по нормализованному ID для быстрого доступа.
+        # Індексуємо записи за нормалізованим ID для швидкого доступу.
         entries_by_id = {
             entry.get('ID', '').strip().lower(): entry
             for entry in entries
             if entry.get('ID')
         }
 
-        # Сохраняем порядок первого упоминания selected_ids и убираем дубликаты.
+        # Зберігаємо порядок першого згадування selected_ids і прибираємо дублікати.
         filtered_entries = []
         seen_ids = set()
         for id_str in selected_ids:
@@ -75,31 +75,31 @@ class BibTeXToDSTUConverter:
         return filtered_entries
 
     def get_entry_ids_from_file(self, filepath: str) -> List[str]:
-        """Получает список всех ID записей из BibTeX файла
+        """Отримує список всіх ID записів з BibTeX файлу
 
         Args:
-            filepath: Путь к BibTeX файлу
+            filepath: Шлях до BibTeX файлу
 
         Returns:
-            Список ID записей
+            Список ID записів
         """
         entries = self.parse_bibtex_file(filepath)
         return [entry.get('ID', '') for entry in entries if entry.get('ID')]
 
     def get_entry_ids_from_string(self, bibtex_string: str) -> List[str]:
-        """Получает список всех ID записей из строки BibTeX
+        """Отримує список всіх ID записів з рядка BibTeX
 
         Args:
-            bibtex_string: Строка в формате BibTeX
+            bibtex_string: Рядок у форматі BibTeX
 
         Returns:
-            Список ID записей
+            Список ID записів
         """
         entries = self.parse_bibtex_string(bibtex_string)
         return [entry.get('ID', '') for entry in entries if entry.get('ID')]
 
     def _finalize_entry(self, parts: List[str]) -> str:
-        """Финализирует запись, объединяя части и добавляя точку в конце"""
+        """Фіналізує запис, об'єднуючи частини і додаючи крапку в кінці"""
         if not parts:
             return ""
 
@@ -108,29 +108,29 @@ class BibTeXToDSTUConverter:
             if i == 0:
                 result_parts.append(part)
             else:
-                # Если часть начинается с "/" или ";"
+                # Якщо частина починається з "/" або ";"
                 if part.startswith(('/','  ;', '; ')):
                     result_parts.append(' ' + part)
-                # Если предыдущая часть заканчивается квадратной скобкой
+                # Якщо попередня частина закінчується квадратною дужкою
                 elif result_parts[-1].endswith(']'):
                     result_parts.append(' ' + part)
-                # Если предыдущая часть заканчивается точкой
+                # Якщо попередня частина закінчується крапкою
                 elif result_parts[-1].endswith('.'):
                     result_parts.append(' ' + part)
-                # Если предыдущая часть заканчивается скобкой
+                # Якщо попередня частина закінчується дужкою
                 elif result_parts[-1].endswith(')'):
                     result_parts.append('. ' + part)
                 else:
                     result_parts.append('. ' + part)
 
         result = ''.join(result_parts)
-        # Убеждаемся что результат заканчивается точкой (но не если заканчивается слешем)
+        # Переконуємося, що результат закінчується крапкою (але не якщо закінчується слешем)
         if not result.endswith('.') and not result.endswith('/'):
             result += '.'
         return result
 
     def _convert_entry(self, entry: Dict) -> Optional[str]:
-        """Конвертирует одну запись в формат DSTU"""
+        """Конвертує одну запис в формат DSTU"""
         entry_type = entry.get('ENTRYTYPE', '').lower()
 
         converters = {
@@ -155,25 +155,25 @@ class BibTeXToDSTUConverter:
 
     def _format_authors(self, authors_string: str, max_authors: int = 3, inverted: bool = False, force_all: bool = False) -> tuple[str, int]:
         """
-        Форматирует авторов согласно DSTU 8302:2015.
+        Форматує авторів згідно з ДСТУ 8302:2015.
 
         Args:
-            authors_string: Строка авторов (разделены 'and')
-            max_authors: Максимальное количество авторов для отображения
-            inverted: Использовать формат "И.О. Фамилия" вместо "Фамилия И.О."
-            force_all: Форсировать вывод всех авторов независимо от количества
+            authors_string: Строка авторів (розділені 'and')
+            max_authors: Максимальна кількість авторів для відображення
+            inverted: Використовувати формат "І.О. Прізвище" замість "Прізвище І.О."
+            force_all: Форсувати вивід всіх авторів незалежно від кількості
         """
         if not authors_string:
             return "", 0
 
-        # Разделяем авторов и фильтруем "others"
+        # Розділяємо авторів і фільтруємо "others"
         authors = [a.strip() for a in authors_string.split(' and ')]
         authors = [a for a in authors if a.lower() != 'others']
         author_count = len(authors)
 
         format_func = self._format_author_inverted if inverted else self._format_single_author
 
-        # Если force_all=True, выводим всех авторов
+        # Якщо force_all=True, виводимо всіх авторів
         if force_all:
             formatted_authors = [format_func(a) for a in authors]
             return ', '.join(formatted_authors), author_count
@@ -191,17 +191,17 @@ class BibTeXToDSTUConverter:
             else:
                 return formatted_authors[0] + ' та ін.', author_count
         else:
-            # 5+ авторов
+            # 5+ авторів
             is_english = self._is_english({'author': authors_string})
             et_al = ' et al.' if is_english else ' та ін.'
             return formatted_authors[0] + et_al, author_count
 
     def _split_author_no_comma(self, parts: list) -> tuple[str, list]:
-        """Определяет фамилию и остальные имена для автора без запятой.
+        """Визначає прізвище і решту імені для автора без коми.
 
-        Если все части — длинные слова без точек (формат «Прізвище Ім'я По-батькові»),
-        то первое слово считается фамилией.
-        Иначе (стандартный BibTeX «FirstName LastName») — последнее слово фамилия.
+        Якщо всі частини — довгі слова без крапок (формат «Прізвище Ім'я По-батькові»),
+        то перше слово вважається прізвищем.
+        Інакше (стандартний BibTeX «FirstName LastName») — останнє слово прізвище.
         """
         if len(parts) >= 2 and all(len(p.replace('.', '')) > 1 and '.' not in p for p in parts):
             # «Прізвище Ім'я [По-батькові]»
@@ -211,7 +211,7 @@ class BibTeXToDSTUConverter:
             return parts[-1], parts[:-1]
 
     def _format_single_author(self, author: str) -> str:
-        """Форматирует одного автора: Фамилия И. О."""
+        """Форматує одного автора: Прізвище І. О."""
         author = ' '.join(author.split())
 
         if ',' in author:
@@ -237,7 +237,7 @@ class BibTeXToDSTUConverter:
             return author
 
     def _format_author_inverted(self, author: str) -> str:
-        """Форматирует одного автора: И.О. Фамилия"""
+        """Форматує одного автора: І.Б. Прізвище"""
         author = ' '.join(author.split())
 
         if ',' in author:
@@ -265,7 +265,7 @@ class BibTeXToDSTUConverter:
             return author
 
     def _format_single_author_genitive(self, author: str) -> str:
-        """Форматирует одного автора в родительном падеже: И. О. Фамилии"""
+        """Форматує одного автора у родовому відмінку: І. Б. Прізвища"""
         author = ' '.join(author.split())
 
         if ',' in author:
@@ -295,7 +295,7 @@ class BibTeXToDSTUConverter:
             return author
 
     def _to_genitive(self, lastname: str) -> str:
-        """Простое преобразование фамилии в родительный падеж"""
+        """Просте перетворення прізвища у родовий падіж"""
         if lastname.endswith('ко') or lastname.endswith('енко'):
             return lastname[:-1] + 'а'
         elif lastname.endswith('ук') or lastname.endswith('юк'):
@@ -316,7 +316,7 @@ class BibTeXToDSTUConverter:
             return lastname
 
     def _abbreviate_publisher(self, publisher: str) -> str:
-        """Скорочує повні назви видавництв/організацій згідно ДСТУ 3582:2013.
+        """Скорочує повні назви видавництв/організацій згідно з ДСТУ 3582:2013.
 
         Наприклад:
           «Інститут літератури імені Т. Г. Шевченка» → «Ін-т літератури ім. Т. Г. Шевченка»
@@ -325,13 +325,13 @@ class BibTeXToDSTUConverter:
         import re
         p = publisher
 
-        # Порядок важен: сначала более длинные совпадения
+        # Порядок важливий: спочатку довші збіги
         replacements = [
             (r'\bІнститут\b', 'Ін-т'),
             (r'\bінститут\b', 'ін-т'),
             (r'\bInstitute\b', 'Inst.'),
             (r'\bімені\b', 'ім.'),
-            (r'\bіменi\b', 'ім.'),   # латинская i
+            (r'\bіменi\b', 'ім.'),   # латинська i
             (r'\bНаціональний університет\b', 'Нац. ун-т'),
             (r'\bНаціональний\b', 'Нац.'),
             (r'\bДержавний\b', 'Держ.'),
@@ -349,11 +349,11 @@ class BibTeXToDSTUConverter:
         return p
 
     def _format_book(self, entry: Dict) -> str:
-        """Форматирует книгу согласно Д.1 DSTU 8302:2015"""
+        """Форматує книгу згідно з Д.1 DSTU 8302:2015"""
         parts = []
         is_english = self._is_english(entry)
 
-        # Авторы
+        # Автори
         authors_str = entry.get('author', '')
         authors_list = []
         author_count = 0
@@ -361,42 +361,42 @@ class BibTeXToDSTUConverter:
 
         if authors_str:
             authors_raw = [a.strip() for a in authors_str.split(' and ')]
-            # Проверяем наличие "others"
+            # Перевіряємо наявність "others"
             has_others = any(a.lower() == 'others' for a in authors_raw)
-            # Фильтруем "others"
+            # Фільтруємо "others"
             authors_list = [a for a in authors_raw if a.lower() != 'others']
             author_count = len(authors_list)
 
-            # Проверяем, является ли автор организацией (нет запятой в имени)
+            # Перевіряємо, чи є автор організацією (немає коми в імені)
             if author_count == 1 and ',' not in authors_list[0]:
-                # Может быть организация типа "Верховна Рада України"
+                # Може бути організація на кшталт "Верховна Рада України"
                 author_text = authors_list[0]
-                # Если содержит типичные слова организаций
+                # Якщо містить типові слова організацій
                 if any(word in author_text for word in ['Рада', 'Інститут', 'Університет', 'Міністерство', 'Комітет']):
                     is_organization_author = True
 
-            # Если есть "others", то это значит 5+ авторов
+            # Якщо є "others", це означає 5+ авторів
             if has_others and author_count <= 4:
                 author_count = 5
 
-        # Название + тип
+        # Назва + тип
         title = self._clean_text(entry.get('title', ''))
         subtitle = self._clean_text(entry.get('subtitle', ''))
         book_type = self._clean_text(entry.get('type', ''))
         note = entry.get('note', '')
         volume = entry.get('volume', '')
 
-        # Проверяем, есть ли том внутри названия (для Дендрофлора України)
+        # Перевіряємо, чи є том у назві (для Дендрофлора України)
         title_has_volume = 'т.' in title.lower() or 'т. ' in title.lower() or 'Т.' in title or 'Т. ' in title
 
         if title:
             title = title.replace('{', '').replace('}', '')
 
-            # Если есть note "у 6 т." или подобное, добавляем к названию
+            # Якщо є note "у 6 т." або подібне, додаємо до назви
             if note and ('у ' in note and 'т.' in note):
                 title_full = f"{title} : {note}"
             elif subtitle and not volume:
-                # Subtitle добавляется к названию только если нет volume (не багатотомне издание)
+                # Subtitle додається до назви лише якщо немає volume (не багатотомне видання)
                 subtitle = subtitle.replace('{', '').replace('}', '')
                 if book_type:
                     title_full = f"{title} : {subtitle} : {book_type}"
@@ -407,20 +407,20 @@ class BibTeXToDSTUConverter:
             else:
                 title_full = title
 
-            # Добавляем note к title если это дополнительная информация (станом на...)
+            # Додаємо note до title, якщо це додаткова інформація (станом на...)
             if note and ('станом на' in note or 'стан на' in note):
                 title_full = f"{title_full} : {note}"
         else:
             title_full = ''
 
-        # Логика для авторов
+        # Логіка для авторів
         if title_has_volume and author_count >= 1:
-            # Название содержит информацию о томе - название первым
+            # Назва містить інформацію про том - назва першою
             parts.append(title_full)
             first_author = self._format_author_inverted(authors_list[0])
             parts.append(f"/ {first_author}")
         elif is_organization_author:
-            # Автор - организация, название первым
+            # Автор - організація, назва першою
             parts.append(title_full)
             parts.append(f"/ {authors_list[0]}")
         elif author_count >= 1 and author_count <= 3:
@@ -430,13 +430,13 @@ class BibTeXToDSTUConverter:
             parts.append(title_full)
 
         elif author_count == 4:
-            # 4 автора - название первое, потом авторы в обычном формате Фамилия И.О.
+            # 4 автора - назва перша, потім автори в звичайному форматі Прізвище І.О.
             parts.append(title_full)
             all_authors = [self._format_single_author(a) for a in authors_list]
             parts.append(f"/ {', '.join(all_authors)}")
 
         elif author_count >= 5:
-            # 5+ авторов - название первое, потом первый + та ін./et al.
+            # 5+ авторів - назва перша, потім перший + та ін./et al.
             parts.append(title_full)
             first_author = self._format_single_author(authors_list[0])
             if is_english:
@@ -444,7 +444,7 @@ class BibTeXToDSTUConverter:
             else:
                 parts.append(f"/ {first_author} та ін.")
         else:
-            # Без авторов
+            # Без авторів
             if title_full:
                 parts.append(title_full)
 
@@ -467,12 +467,12 @@ class BibTeXToDSTUConverter:
             parts.append(f"/ {etype} {formatted_editor}")
 
         elif editor and (author_count == 4 or author_count >= 5) and not title_has_volume:
-            # Обработка редакторов для 4+ авторов
+            # Обробка редакторів для 4+ авторів
             self._handle_editors_with_authors(entry, parts, note)
 
         elif editor and author_count == 0:
-            # Обработка редакторов без авторов
-            # Сначала проверяем, есть ли note с организацией (не является типом редактора)
+            # Обробка редакторів без авторів
+            # Спочатку перевіряємо, чи є note з організацією (не є типом редактора)
             editor_types = ['редкол.', 'заг. ред.', 'ред.', 'упоряд.', 'уклад.', 'голов. ред.']
             editortype = entry.get('editortype', '').strip()
             is_volume_note = note and ('у ' in note and 'т.' in note)
@@ -480,9 +480,9 @@ class BibTeXToDSTUConverter:
                                (note and any(keyword in note.lower() for keyword in editor_types)))
 
             if note and not has_editor_type and not is_volume_note:
-                # Note содержит организацию
+                # Note містить організацію
                 parts.append(f"/ {note}")
-                # Теперь проверяем editor для "за заг. ред."
+                # Тепер перевіряємо editor для "за заг. ред."
                 if editor:
                     editors_list = [e.strip() for e in editor.split(' and ')]
                     editors_list = [e for e in editors_list if e.lower() != 'others']
@@ -490,7 +490,7 @@ class BibTeXToDSTUConverter:
                         editor_name = self._format_single_author_genitive(editors_list[0])
                         parts.append(f"; за заг. ред. {editor_name}")
             elif is_volume_note and editor:
-                # Для багатотомных изданий: название уже содержит том info, нужно добавить редактора
+                # Для багатотомних видань: назва вже містить інформацію про том, треба додати редактора
                 etype = self._get_editor_type(entry)
                 if not etype:
                     etype = 'голов. ред.'
@@ -499,11 +499,11 @@ class BibTeXToDSTUConverter:
                 etype = self._get_editor_type(entry)
                 self._handle_editors_no_author(entry, parts, etype if etype else note)
         elif not editor and author_count == 0 and note:
-            # Нет авторов и редакторов, но есть note с информацией
+            # Немає авторів і редакторів, але є note з інформацією
             if 'упоряд.' in note or 'уклад.' in note:
                 parts.append(f"/ {note}")
 
-        # Издание
+        # Видання
         edition = entry.get('edition', '')
         if edition:
             edition_text = self._format_edition(edition, is_english)
@@ -513,7 +513,7 @@ class BibTeXToDSTUConverter:
                     edition_text = f"{edition_text}, {note_text}"
             parts.append(edition_text)
 
-        # Место, издатель, год
+        # Місце, видавець, рік
         publisher_parts = []
         address = entry.get('address', '')
         if address:
@@ -523,7 +523,7 @@ class BibTeXToDSTUConverter:
         if publisher:
             publisher = self._abbreviate_publisher(publisher)
             if address:
-                # Для институтов и сокращённых названий - без лишнего пробела
+                # Для інститутів і скорочених назв — без зайвого пробілу
                 if 'Ін-т' in publisher or 'ін-т' in publisher or 'ун-т' in publisher:
                     publisher_parts.append(f": {publisher}")
                 else:
@@ -536,7 +536,7 @@ class BibTeXToDSTUConverter:
             publisher_parts.append(f", {year}")
 
         if publisher_parts:
-            # Объединяем части с пробелами, но корректно обрабатываем двоеточие
+            # Об'єднуємо частини з пробілами, але коректно обробляємо двокрапку
             pub_text = ''
             for i, part in enumerate(publisher_parts):
                 if i == 0:
@@ -551,19 +551,19 @@ class BibTeXToDSTUConverter:
         # Том
         if volume and not title_has_volume:
             volume_part = f"Т. {volume}"
-            # Если есть subtitle и он НЕ был включен в название (т.е. это багатотомное издание), добавляем после тома через двоеточие
+            # Якщо є subtitle і він НЕ був включений до назви (тобто це багатотомне видання), додаємо після тому через двокрапку
             if subtitle and volume and not ('у ' in note and 'т.' in note):
                 subtitle = subtitle.replace('{', '').replace('}', '')
                 volume_part = f"{volume_part} : {subtitle}"
             parts.append(volume_part)
 
-        # Страницы
+        # Сторінки
         pages = entry.get('pages', '')
         if not pages and 'pagetotal' in entry:
             pages = entry.get('pagetotal', '')
 
         if pages:
-            # Для багатотомных изданий с диапазоном страниц используется формат "С. номера"
+            # Для багатотомних видань з діапазоном сторінок використовується формат "С. номера"
             pages = pages.replace('--', '–').replace('-', '–')
             if volume and ('–' in pages or ',' in pages):
                 page_prefix = "P." if is_english else "С."
@@ -593,7 +593,7 @@ class BibTeXToDSTUConverter:
         return self._finalize_entry(parts)
 
     def _handle_editors_with_authors(self, entry: Dict, parts: List[str], note: str):
-        """Обрабатывает редакторов когда есть 4+ авторов"""
+        """Обробляє редакторів коли є 4+ авторів"""
         editor = entry.get('editor', '')
 
         if not editor:
@@ -603,7 +603,7 @@ class BibTeXToDSTUConverter:
         has_others = any(e.lower() == 'others' for e in editors_list)
         editors_list = [e for e in editors_list if e.lower() != 'others']
 
-        # Определяем тип редактора из editortype (приоритет) или note
+        # Визначаємо тип редактора з editortype (пріоритет) або note
         editor_type = self._get_editor_type(entry)
         if not editor_type:
             editor_type = "заг. ред."
@@ -622,14 +622,14 @@ class BibTeXToDSTUConverter:
             parts.append(f"; {editor_type} {', '.join(formatted_editors)}")
 
     def _handle_editors_no_author(self, entry: Dict, parts: List[str], note: str):
-        """Обрабатывает редакторов когда нет авторов.
+        """Обробляє редакторів коли немає авторів.
 
-        note — уже нормализованный тип (из _get_editor_type) или сырой note.
+        note — вже нормалізований тип (з _get_editor_type) або сирий note.
         """
         editor = entry.get('editor', '')
 
         if not editor:
-            # Проверяем note на наличие информации типа "упоряд. В. Олексик"
+            # Перевіряємо note на наявність інформації типу "упоряд. В. Олексик"
             raw_note = entry.get('note', '')
             if raw_note and ('упоряд.' in raw_note or 'уклад.' in raw_note):
                 parts.append(f"/ {raw_note}")
@@ -639,20 +639,20 @@ class BibTeXToDSTUConverter:
         has_others = any(e.lower() == 'others' for e in editors_list)
         editors_list = [e for e in editors_list if e.lower() != 'others']
 
-        # Получаем тип редактора. note уже может быть нормализованным типом или пустым.
-        etype = note  # передали уже нормализованный тип
+        # Отримуємо тип редактора. note вже може бути нормалізованим типом або пустим.
+        etype = note  # передали вже нормалізований тип
 
-        # Если пустой — определяем из editortype/note записи
+        # Якщо пустий — визначаємо з editortype/note запису
         if not etype:
             etype = self._get_editor_type(entry)
 
-        # Поддержка нескольких типов редакторов (например "заг. ред. and уклад.")
+        # Підтримка кількох типів редакторів (наприклад "заг. ред. and уклад.")
         per_types = self._get_per_editor_types(entry)
         editortype_raw = entry.get('editortype', '').strip()
         has_multiple_types = ' and ' in editortype_raw
 
         if has_multiple_types and len(per_types) >= 2 and not has_others:
-            # Каждый редактор имеет свой тип: «/ заг. ред. В. І. Гарапко, уклад. А. І. Гарапко»
+            # Кожен редактор має свій тип: «/ заг. ред. В. І. Гарапко, уклад. А. І. Гарапко»
             parts_str = []
             for i, (ed, et) in enumerate(zip(editors_list, per_types)):
                 fmt = self._format_author_inverted(ed)
@@ -703,7 +703,7 @@ class BibTeXToDSTUConverter:
             raw_note = entry.get('note', '')
             if len(editors_list) == 1:
                 editor_name = self._format_author_inverted(editors_list[0])
-                # Проверяем, есть ли "уклад." в note
+                # Перевіряємо, є ли "уклад." в note
                 if 'уклад.' in raw_note or 'уклад. :' in raw_note:
                     compiler_info = self._extract_compiler_from_note(raw_note)
                     if compiler_info:
@@ -738,7 +738,7 @@ class BibTeXToDSTUConverter:
                     parts.append(f"/ {compiler_info}")
 
         else:
-            # Неизвестный тип — используем "ред." по умолчанию
+            # Неізвестний тип — використовуємо "ред." за замовчуванням
             if editors_list:
                 if len(editors_list) == 1:
                     editor_name = self._format_author_inverted(editors_list[0])
@@ -748,13 +748,13 @@ class BibTeXToDSTUConverter:
                     parts.append(f"/ ред. : {', '.join(formatted_editors)}")
 
     def _normalize_editor_type(self, raw: str) -> str:
-        """Нормализует одно значение типа редактора.
+        """Нормалізує одне значення типу редактора.
 
-        Убирает префикс «за » в начале (за ред. → ред., за заг. ред. → заг. ред.),
-        а также приводит к каноническому виду.
+        Убирає префікс «за » в початку (за ред. → ред., за заг. ред. → заг. ред.),
+        а також приводить до канонічного вигляду.
         """
         t = raw.strip()
-        # Убираем префикс «за » в начале
+        # Убираємо префікс «за » в початку
         if t.lower().startswith('за '):
             t = t[3:].strip()
 
@@ -768,7 +768,7 @@ class BibTeXToDSTUConverter:
         if 'заг. ред.' in tl:
             return 'заг. ред.'
         if 'упоряд. та відп. ред.' in tl or 'упоряд. і відп. ред.' in tl:
-            return t  # сохраняем дословно
+            return t  # зберігаємо дослівно
         if 'відпов. за вип.' in tl or 'відп. за вип.' in tl:
             return t
         if 'уклад.' in tl:
@@ -782,15 +782,15 @@ class BibTeXToDSTUConverter:
         return t
 
     def _get_editor_type(self, entry: Dict) -> str:
-        """Возвращает тип редактора из editortype (приоритет) или note.
+        """Повертає тип редактора з editortype (пріоритет) або note.
 
-        Нормализует значения: убирает префикс «за », приводит к канонической форме.
-        Берёт первое значение, если editortype содержит несколько (через ' and ').
+        Нормалізує значення: прибирає префікс «за », приводить до канонічної форми.
+        Береться перше значення, якщо editortype містить кілька (через ' and ').
         """
         editortype = entry.get('editortype', '').strip()
         note = entry.get('note', '').strip()
 
-        # Берём первое значение editortype
+        # Беремо перше значення editortype
         raw = editortype.split(' and ')[0].strip() if editortype else ''
 
         if raw:
@@ -810,15 +810,15 @@ class BibTeXToDSTUConverter:
         return ''
 
     def _get_per_editor_types(self, entry: Dict) -> list:
-        """Возвращает список нормализованных типов для каждого редактора.
+        """Повертає список нормалізованих типів для кожного редактора.
 
-        editortype может содержать несколько значений через ' and ', каждое из которых
-        соответствует отдельному редактору из поля editor (тоже разделённых ' and ').
-        Префикс «за » убирается из каждого значения.
+        editortype може містити кілька значень через ' and ', кожне з яких
+        відповідає окремому редактору з поля editor (теж розділених ' and ').
+        Префікс «за » прибирається з кожного значення.
 
-        Примеры:
+        Приклади:
           editortype = «заг. ред. and уклад.»  → ['заг. ред.', 'уклад.']
-          editortype = «за ред.»               → ['ред.', 'ред.', ...]  (для всех ред-ров)
+          editortype = «за ред.»               → ['ред.', 'ред.', ...]  (для всіх ред-рів)
           editortype = «редкол. all»            → ['редкол.', 'редкол.', ...]
         """
         editortype = entry.get('editortype', '').strip()
@@ -831,30 +831,30 @@ class BibTeXToDSTUConverter:
         if ' and ' in editortype:
             raw_types = [t.strip() for t in editortype.split(' and ')]
             normalized = [self._normalize_editor_type(t) for t in raw_types]
-            # Дополняем до количества редакторов последним значением
+            # Доповнюємо до кількості редакторів останнім значенням
             while len(normalized) < n:
                 normalized.append(normalized[-1] if normalized else 'ред.')
             return normalized[:n]
         else:
-            # Один тип для всех редакторов
+            # Один тип для всіх редакторів
             single = self._get_editor_type(entry)
             return [single] * n
 
     def _extract_compiler_from_note(self, note: str) -> str:
-        """Извлекает информацию о составителе из note"""
+        """Витягує інформацію про укладача з note"""
         if 'уклад.' in note:
-            # Находим текст после "уклад."
+            # Знаходимо текст після "уклад."
             match = re.search(r'уклад\.\s*([^;]+)', note)
             if match:
                 return f"уклад. {match.group(1).strip()}"
         return ""
 
     def _format_article(self, entry: Dict) -> str:
-        """Форматирует статью в журнале согласно Д.13.3 DSTU 8302:2015"""
+        """Форматує статтю в журналі згідно з Д.13.3 DSTU 8302:2015"""
         parts = []
         is_english = self._is_english(entry)
 
-        # Авторы
+        # Автори
         authors = entry.get('author', '')
         author_count = 0
         title_first = False
@@ -864,53 +864,53 @@ class BibTeXToDSTUConverter:
             authors_list = [a for a in authors_list if a.lower() != 'others']
             author_count = len(authors_list)
 
-            # Для статей с 5-6 авторами проверяем порядок в исходном BibTeX
-            # Если title появляется ПЕРЕД author в entry, то title первым
+            # Для статей з 5-6 авторами перевіряємо порядок в початковому BibTeX
+            # Якщо title з’являється ПЕРЕД author в entry, тоді title першим
             title = self._clean_text(entry.get('title', ''))
             entry_id = entry.get('ID', '').lower()
 
-            # Проверка: если в BibTeX title идет перед author, то title_first = True
-            # Эвристики:
-            # 1. ID начинается с части названия (не фамилии)
-            # 2. ID короткий и общий (research, ai, и т.д.)
+            # Перевірка: якщо в BibTeX title йде перед author, то title_first = True
+            # Евристики:
+            # 1. ID починається з частини назви (не прізвища)
+            # 2. ID короткий і загальний (research, ai, і т.д.)
             if author_count >= 5:
                 first_author_surname = authors_list[0].split(',')[0].strip() if ',' in authors_list[0] else authors_list[0].split()[0].strip()
 
-                # Список общих префиксов для title_first
+                # Список загальних префіксів для title_first
                 title_first_prefixes = ['research', 'ai', 'study', 'analysis', 'development']
 
                 if title:
                     title_words = title.split()
                     first_title_word = title_words[0].lower() if title_words else ''
 
-                    # Проверка 1: ID начинается с первого слова title
+                    # Перевірка 1: ID починається з першого слова title
                     if entry_id.startswith(first_title_word[:5]) and len(first_title_word) > 4:
                         title_first = True
-                    # Проверка 2: ID начинается с общего префикса
+                    # Перевірка 2: ID починається з загального префікса
                     elif any(entry_id.startswith(prefix) for prefix in title_first_prefixes):
                         title_first = True
 
-            # Для статей: если 5-6 авторов, выводим всех
+            # Для статей: якщо 5-6 авторів, виводимо всіх
             if author_count >= 5 and author_count <= 6:
                 if title_first:
-                    # Title первым, потом авторы инвертированные
+                    # Title першим, потім автори з інверсією
                     if title:
                         title = title.replace('{', '').replace('}', '')
                         parts.append(title)
-                    # Все авторы в инвертированном формате
+                    # Усі автори в інвертованому форматі
                     formatted_authors = []
                     for a in authors_list:
                         formatted = self._format_author_inverted(a)
                         formatted_authors.append(formatted)
-                    # Соединяем с запятыми
+                    # Об’єднуємо через коми
                     authors_str = ', '.join(formatted_authors)
-                    # Убираем пробел только для конкретного случая "A. Dyka" -> "A.Dyka"
-                    # Это исключение в ДСТУ для этой конкретной фамилии
+                    # Прибираємо пробіл лише для конкретного випадку "A. Dyka" -> "A.Dyka"
+                    # Це виняток у ДСТУ для цієї конкретної прізвища
                     import re
                     authors_str = authors_str.replace('A. Dyka', 'A.Dyka')
                     parts.append(f"/ {authors_str}")
                 else:
-                    # Авторы первыми, все в обычном формате
+                    # Автори першими, всі у звичайному форматі
                     formatted_authors = [self._format_single_author(a) for a in authors_list]
                     parts.append(', '.join(formatted_authors))
             elif author_count == 4:
@@ -920,7 +920,7 @@ class BibTeXToDSTUConverter:
                 formatted_authors, _ = self._format_authors(authors, max_authors=3, force_all=False)
                 parts.append(formatted_authors)
 
-        # Название статьи (если еще не добавлено)
+        # Назва статті (якщо ще не додано)
         if not title_first or not authors or author_count < 5:
             title = self._clean_text(entry.get('title', ''))
             if title:
@@ -932,16 +932,16 @@ class BibTeXToDSTUConverter:
         url = entry.get('url', '')
         if journal:
             journal = self._clean_text(journal)
-            # Если есть 6 авторов и все перечислены, добавляем "/" перед журналом
+            # Якщо є 6 авторів і всіх перелічено, додаємо "/" перед журналом
             if author_count == 6 and not title_first:
                 parts.append(f'/ {journal}')
-            # Для электронных журналов (название содержит "електронний") используем "//"
+            # Для електронних журналів (назва містить "електронний") використовуємо "//"
             elif url and 'електронний' in journal.lower():
                 parts.append(f'// {journal}')
             else:
                 parts.append(f'{journal}')
 
-        # Год, том, номер
+        # Рік, том, номер
         address = entry.get('address', '')
         year = entry.get('year', '')
         volume = entry.get('volume', '')
@@ -954,10 +954,10 @@ class BibTeXToDSTUConverter:
         if year:
             year_parts.append(year)
 
-        # Месяц (если есть)
+        # Місяць (якщо є)
         if month:
             month = month.strip()
-            # Если месяц в формате "1 листоп.", добавляем в скобках к номеру
+            # Якщо місяць в форматі "1 листоп.", додаємо в скобках до номера
             if number and ('листоп' in month or 'січ' in month or 'лют' in month or 'берез' in month
                           or 'квіт' in month or 'трав' in month or 'черв' in month or 'лип' in month
                           or 'серп' in month or 'верес' in month or 'жовт' in month or 'груд' in month):
@@ -969,7 +969,7 @@ class BibTeXToDSTUConverter:
                     num_text = f"No {number}" if is_english else f"№ {number}"
                     year_parts.append(num_text)
         elif volume and number:
-            # Том и номер вместе: "Vol. 18, No 2"
+            # Том і номер разом: "Vol. 18, No 2"
             vol_text = f"Vol. {volume}" if is_english else f"Т. {volume}"
             num_text = f"No {number}" if is_english else f"№ {number}"
             year_parts.append(f"{vol_text}, {num_text}")
@@ -982,11 +982,11 @@ class BibTeXToDSTUConverter:
             year_parts.append(vol_text)
 
         if year_parts:
-            # Форматируем year_parts: address, year через запятую, потом остальное через точку
+            # Форматируем year_parts: address, year через запяту, потом остальное через точку
             result_year = []
             if address and year:
                 result_year.append(f"{address}, {year}")
-                # Добавляем том и номер через точку
+                # Додаємо том і номер через крапку
                 for i in range(2, len(year_parts)):
                     result_year.append(year_parts[i])
             else:
@@ -994,67 +994,67 @@ class BibTeXToDSTUConverter:
 
             parts.append('. '.join(result_year))
 
-        # Страницы
+        # Сторінки
         pages = entry.get('pages', '')
         if pages:
             pages = pages.replace('--', '–').replace('-', '–')
-            # Проверяем, является ли это статьей закона с явным указанием "Ст."
+            # Перевіряємо, чи є це статтею закону з явним зазначенням "Ст."
             note = entry.get('note', '')
             is_law_article = note and 'Ст.' in note
 
             if is_law_article:
-                # Для статей законов используем "Ст."
+                # Для статей законів використовуємо "Ст."
                 page_prefix = "Ст."
             else:
-                # Для журнальных статей используем латинскую C для украинских, P для английских
-                # Проверяем наличие DOI - если есть, это журнальная статья
+                # Для журнальних статей використовуємо латинську C для українських, P для англійських
+                # Перевіряємо наявність DOI — якщо є, це журнальна стаття
                 has_doi = bool(entry.get('doi', ''))
                 if has_doi:
-                    # Журнальная статья с DOI - используем латинскую C
+                    # Журнальна стаття з DOI — використовуємо латинську C
                     page_prefix = "P." if is_english else "C."
                 else:
-                    # Обычная статья - используем кириллическую С
+                    # Звичайна стаття — використовуємо кириличну С
                     page_prefix = "P." if is_english else "С."
             parts.append(f"{page_prefix} {pages}")
 
-        # DOI (специальный формат для статей)
+        # DOI (спеціальний формат для статей)
         doi = entry.get('doi', '')
         if doi:
             urldate = entry.get('urldate', '') or entry.get('note', '')
 
             if is_english:
-                # Для английских статей - простой формат
+                # Для англійських статей — простий формат
                 doi_part = f"DOI: https://doi.org/{doi}"
                 if urldate:
                     date_formatted = self._format_access_date(urldate)
                     doi_part += f" (дата звернення: {date_formatted})"
                 parts.append(doi_part)
             else:
-                # Для украинских статей - специальный формат с разделением
+                # Для українських статей — спеціальний формат з розділенням
                 if title_first:
-                    # Для статей с title_first: полный DOI URL
+                    # Для статей з title_first: повний DOI URL
                     if urldate:
                         date_formatted = self._format_access_date(urldate)
                         parts.append(f"DOI: https://doi.org/{doi} (дата звернення: {date_formatted})")
                     else:
                         parts.append(f"DOI: https://doi.org/{doi}")
                 else:
-                    # Для обычных украинских статей: короткая часть, потом усеченный URL
+                    # Для звичайних українських статей: коротка частина, потім скорочений URL
                     doi_parts = doi.split('/')
                     doi_short = doi_parts[-1] if doi_parts else doi
 
                     if urldate:
                         date_formatted = self._format_access_date(urldate)
-                        # Усекаем URL до первой части DOI (без последнего сегмента)
+                        # Скорочуємо URL до першої частини DOI (без останнього сегмента)
                         doi_base = '/'.join(doi.split('/')[:-1])
                         parts.append(f"{doi_short} (дата звернення: {date_formatted}). DOI: https://doi.org/{doi_base}/")
                     else:
                         parts.append(f"DOI: https://doi.org/{doi}")
 
-        # URL (если нет DOI)
+        # URL (якщо немає DOI)
         url = entry.get('url', '')
         if url and not doi:
-            # Для электронных журналов (с "електронний") - без тире, для обычных - с тире
+            # Для електронних журналів (з "електронний") — без тире, для звичайних — з тире
             journal = entry.get('journal', '')
             is_electronic = journal and 'електронний' in journal.lower()
 
@@ -1069,10 +1069,10 @@ class BibTeXToDSTUConverter:
             if urldate:
                 date_formatted = self._format_access_date(urldate)
                 if is_electronic:
-                    # Для электронных журналов: без точки и двоеточия
+                    # Для електронних журналів: без крапки і двокрапки
                     url_part += f" (дата звернення {date_formatted})"
                 else:
-                    # Для обычных: с точкой и двоеточием
+                    # Для звичайних: з крапкою і двоеточием
                     url_part += f". (дата звернення: {date_formatted})"
             parts.append(url_part)
 
@@ -1080,23 +1080,23 @@ class BibTeXToDSTUConverter:
         return self._finalize_entry(parts)
 
     def _format_conference(self, entry: Dict) -> str:
-        """Форматирует материалы конференции согласно Д.13.4 DSTU 8302:2015"""
+        """Форматує матеріали конференції згідно з Д.13.4 DSTU 8302:2015"""
         parts = []
         is_english = self._is_english(entry)
 
-        # Авторы
+        # Автори
         authors = entry.get('author', '')
         if authors:
             formatted_authors, _ = self._format_authors(authors)
             parts.append(formatted_authors)
 
-        # Название доклада
+        # Назва доповіді
         title = self._clean_text(entry.get('title', ''))
         if title:
             title = title.replace('{', '').replace('}', '')
             parts.append(title)
 
-        # Название конференции
+        # Назва конференції
         booktitle = entry.get('booktitle', '')
         if booktitle:
             booktitle = self._clean_text(booktitle)
@@ -1105,21 +1105,21 @@ class BibTeXToDSTUConverter:
             editor = entry.get('editor', '')
             editortype = entry.get('editortype', '').strip()
 
-            # Определяем, является ли note информацией о дате/месте конференции
+            # Визначаємо, чи є note інформацією про дату/місце конференції
             note_is_date = note and ('р.' in note or 'р,' in note or 'Ukraine' in note
                                      or re.search(r'\b20\d\d\b', note))
-            # Определяем, является ли editortype/note типом редактора
+            # Визначаємо, чи є editortype/note типом редактора
             editor_keywords = ['відпов. за вип.', 'відп. за вип.', 'ред.', 'упоряд.']
             note_is_editor = note and any(k in note for k in editor_keywords)
             editortype_is_editor = editortype and any(k in editortype for k in editor_keywords)
 
             if note_is_date:
-                # Для английских конференций используем точку, для украинских - запятую
+                # Для англійських конференцій використовуємо крапку, для українських — кому
                 separator = ". " if is_english else ", "
                 conf_text = f"{booktitle}{separator}{note}"
                 parts.append(conf_text)
             elif (note_is_editor or editortype_is_editor) and editor:
-                # note или editortype содержит информацию о редакторе
+                # note або editortype містить інформацію про редактора
                 editors_list = [e.strip() for e in editor.split(' and ')]
                 editors_list = [e for e in editors_list if e.lower() != 'others']
                 if editors_list:
@@ -1130,7 +1130,7 @@ class BibTeXToDSTUConverter:
                 else:
                     parts.append(booktitle)
             else:
-                # Старая логика
+                # Стара логіка
                 month = entry.get('month', '')
                 address = entry.get('address', '')
 
@@ -1148,9 +1148,9 @@ class BibTeXToDSTUConverter:
 
                 parts.append(' : '.join(conf_parts) if len(conf_parts) > 1 else conf_parts[0])
 
-        # Издательская информация (адрес, год)
+        # Видавнича інформація (адреса, рік)
         if not (entry.get('note', '') and ('р.' in entry.get('note', '') or 'Ukraine' in entry.get('note', ''))):
-            # Добавляем адрес и год только если они не в note
+            # Додаємо адресу і рік лише якщо вони не в note
             address = entry.get('address', '')
             year = entry.get('year', '')
             pub_parts = []
@@ -1163,12 +1163,12 @@ class BibTeXToDSTUConverter:
             if pub_parts:
                 parts.append(', '.join(pub_parts))
 
-        # Страницы
+        # Сторінки
         pages = entry.get('pages', '')
         if pages:
             pages = pages.replace('--', '–').replace('-', '–')
             page_prefix = "P." if is_english else "С."
-            # Проверяем формат страниц - если начинаются с цифры 3, убираем пробел
+            # Перевіряємо формат сторінок - якщо починаються з цифри 3, прибираємо пробіл
             if pages.startswith('3'):
                 parts.append(f"{page_prefix}{pages}")
             elif '–' in pages or ',' in pages:
@@ -1190,7 +1190,7 @@ class BibTeXToDSTUConverter:
         doi = entry.get('doi', '')
         if doi:
             doi_part = f"DOI: https://doi.org/{doi}"
-            # Добавляем дату обращения если есть
+            # Додаємо дату звернення якщо є
             if not url:
                 urldate = entry.get('urldate', '')
                 if urldate:
@@ -1201,7 +1201,7 @@ class BibTeXToDSTUConverter:
         return self._finalize_entry(parts)
 
     def _format_thesis(self, entry: Dict) -> str:
-        """Форматирует диссертацию согласно Д.3-Д.4 DSTU 8302:2015"""
+        """Форматує дисертацію згідно з Д.3-Д.4 DSTU 8302:2015"""
         parts = []
 
         # Автор
@@ -1210,7 +1210,7 @@ class BibTeXToDSTUConverter:
             formatted_author, _ = self._format_authors(author, max_authors=1)
             parts.append(formatted_author)
 
-        # Название и тип работы
+        # Назва і тип роботи
         title = self._clean_text(entry.get('title', ''))
         thesis_type = entry.get('type', '')
         if not thesis_type:
@@ -1221,17 +1221,17 @@ class BibTeXToDSTUConverter:
 
         if title:
             title = title.replace('{', '').replace('}', '')
-            # Объединяем название и тип через пробел двоеточие
+            # Об’єднуємо назву і тип через пробіл та двокрапку
             parts.append(f"{title} : {thesis_type}")
 
-        # Место и университет
+        # Місце і університет
         school = entry.get('school', '')
         address = entry.get('address', '')
         year = entry.get('year', '')
 
         school_parts = []
         if address and school:
-            # Адрес: Университет
+            # Адреса: Університет
             school_parts.append(f"{address}: {school}")
         elif address:
             school_parts.append(address)
@@ -1242,21 +1242,21 @@ class BibTeXToDSTUConverter:
             school_parts.append(year)
 
         if school_parts:
-            # Первые два элемента через запятую
+            # Перші два елементи через кому
             if len(school_parts) >= 2:
                 parts.append(f"{school_parts[0]}, {school_parts[1]}")
             else:
                 parts.append(school_parts[0])
 
-        # Страницы
+        # Сторінки
         pages = entry.get('pages', '')
         if not pages and 'pagetotal' in entry:
             pages = entry.get('pagetotal', '')
 
         if pages and pages.replace('-', '').isdigit():
-            # Для диссертаций различаем по школе - короткие аббревиатуры используют латинскую "c."
+            # Для дисертацій розрізняємо за школою - короткі абревіатури використовують латинську "c."
             school = entry.get('school', '')
-            use_latin_c = school and len(school) <= 6  # ХНУРЕ = 5 символов
+            use_latin_c = school and len(school) <= 6  # ХНУРЕ = 5 символів
             if use_latin_c:
                 parts.append(f"{pages} c.")
             else:
@@ -1275,22 +1275,22 @@ class BibTeXToDSTUConverter:
         return self._finalize_entry(parts)
 
     def _format_online(self, entry: Dict) -> str:
-        """Форматирует электронный ресурс согласно Д.12 DSTU 8302:2015"""
+        """Форматує електронний ресурс згідно з Д.12 DSTU 8302:2015"""
         parts = []
 
-        # Авторы (если есть)
+        # Автори (якщо є)
         authors = entry.get('author', '')
         if authors:
             formatted_authors, _ = self._format_authors(authors)
             parts.append(formatted_authors)
 
-        # Название
+        # Назва
         title = self._clean_text(entry.get('title', ''))
         if title:
             title = title.replace('{', '').replace('}', '')
             parts.append(title)
 
-        # URL (обязателен для online)
+        # URL (обов'язковий для online)
         url = entry.get('url', '')
         if url:
             need_dot = True
@@ -1332,29 +1332,29 @@ class BibTeXToDSTUConverter:
         return result
 
     def _format_misc(self, entry: Dict) -> str:
-        """Форматирует прочие записи"""
-        # Проверяем, является ли это патентом или авторским свидетельством
+        """Форматує інші записи"""
+        # Перевіряємо, чи є це патентом або авторським свідоцтвом
         title = self._clean_text(entry.get('title', ''))
         note = entry.get('note', '')
 
         if 'пат.' in title or 'А.с.' in title:
-            # Это патент или авторское свидетельство
+            # Це патент або авторське свідоцтво
             parts = []
 
             if title:
                 title = title.replace('{', '').replace('}', '')
 
-                # Для патентов с авторами
+                # Для патентів з авторами
                 authors = entry.get('author', '')
                 if authors and 'А.с.' in title:
-                    # Название идет первым
+                    # Назва йде першою
                     parts.append(title)
-                    # Затем авторы в специальном формате для патентов
+                    # Потім автори у спеціальному форматі для патентів
                     authors_list = [a.strip() for a in authors.split(' and ')]
                     authors_list = [a for a in authors_list if a.lower() != 'others']
                     formatted_authors = []
                     for author in authors_list:
-                        # Специальное форматирование для патентов
+                        # Спеціальне форматування для патентів
                         if ',' in author:
                             lastname, firstnames = author.split(',', 1)
                             lastname = lastname.strip()
@@ -1365,17 +1365,17 @@ class BibTeXToDSTUConverter:
                                 if name:
                                     initials.append(name[0].upper() + '.')
 
-                            # Особый случай для Логінової: "Н. І Логінова."
+                            # Особливий випадок для Логінової: "Н. І Логінова."
                             if lastname == 'Логінова' and len(initials) >= 2:
                                 formatted_initials = []
                                 for i, initial in enumerate(initials):
                                     if i == 1 and initial == 'І.':
-                                        formatted_initials.append('І')  # Без точки
+                                        formatted_initials.append('І')  # Без крапки
                                     else:
                                         formatted_initials.append(initial)
                                 formatted = f"{' '.join(formatted_initials)} {lastname}."
                             else:
-                                # Обычное форматирование для остальных авторов
+                                # Звичайне форматування для решти авторів
                                 formatted = f"{' '.join(initials)} {lastname}"
                             formatted_authors.append(formatted)
                         else:
@@ -1384,11 +1384,11 @@ class BibTeXToDSTUConverter:
                 else:
                     parts.append(title)
 
-            # Добавляем note с информацией о номере и датах
+            # Додаємо note з інформацією про номер і дати
             if note:
                 parts.append(note)
 
-            # URL для патентов (без префикса "URL:")
+            # URL для патентів (без префікса "URL:")
             url = entry.get('url', '')
             if url:
                 urldate = entry.get('urldate', '')
@@ -1400,31 +1400,31 @@ class BibTeXToDSTUConverter:
 
             return self._finalize_entry(parts)
 
-        # Проверяем, является ли это архивным документом
+        # Перевіряємо, чи є це архівним документом
         if 'ЦДАГО' in note or 'Ф.' in note or 'Оп.' in note or 'Спр.' in note or 'Арк.' in note:
-            # Это архивный документ
+            # Це архівний документ
             parts = []
 
             if title:
                 title = title.replace('{', '').replace('}', '')
                 parts.append(title)
 
-            # Добавляем архивную информацию из note
+            # Додаємо архівну інформацію з note
             if note:
                 parts.append(note)
 
             return self._finalize_entry(parts)
 
-        # Обычный misc с URL (законодательные документы и т.д.)
+        # Звичайний misc з URL (законодавчі документи тощо)
         if 'url' in entry:
             parts = []
 
-            # Название
+            # Назва
             if title:
                 title = title.replace('{', '').replace('}', '')
                 parts.append(title)
 
-            # URL с правильным форматированием
+            # URL з правильним форматуванням
             url = entry.get('url', '')
             if url:
                 url_part = f"URL: {url}"
@@ -1439,35 +1439,35 @@ class BibTeXToDSTUConverter:
         return self._format_generic(entry)
 
     def _format_techreport(self, entry: Dict) -> str:
-        """Форматирует технические отчеты и стандарты"""
+        """Форматує технічні звіти і стандарти"""
         parts = []
 
-        # Авторы
+        # Автори
         authors = entry.get('author', '')
         if authors:
             formatted_authors, _ = self._format_authors(authors)
             parts.append(formatted_authors)
 
-        # Название
+        # Назва
         title = self._clean_text(entry.get('title', ''))
         if title:
             title = title.replace('{', '').replace('}', '')
             parts.append(title)
 
-        # Note (для стандартов содержит информацию о дате действия, для препринтів - в кінці)
+        # Note (для стандартів містить інформацію про дату дії, для препринтів - в кінці)
         note = entry.get('note', '')
         is_preprint = note and 'Препринт' in note
 
-        # Для стандартов добавляем note сразу после названия
+        # Для стандартів додаємо note відразу після назви
         if note and not is_preprint:
             parts.append(note)
 
-        # Номер отчета
+        # Номер звіту
         number = entry.get('number', '')
         if number:
             parts.append(number)
 
-        # Организация, адрес, год
+        # Організація, адреса, рік
         institution = entry.get('institution', '')
         publisher = entry.get('publisher', '')
         address = entry.get('address', '')
@@ -1477,7 +1477,7 @@ class BibTeXToDSTUConverter:
         if address:
             pub_parts.append(address)
 
-        # Используем publisher если есть, иначе institution
+        # Використовуємо publisher якщо є, інакше institution
         org = publisher if publisher else institution
         if org:
             org = self._abbreviate_publisher(org)
@@ -1489,16 +1489,16 @@ class BibTeXToDSTUConverter:
         if pub_parts:
             parts.append(''.join(pub_parts).replace(' ,', ','))
 
-        # Страницы
+        # Сторінки
         pages = entry.get('pages', '')
         if pages:
             parts.append(f"{pages} с.")
 
-        # Для препринтов добавляем note в скобках в конце
+        # Для препринтів додаємо note в дужках в кінці
         if is_preprint and note:
             parts.append(f"({note})")
 
-        # Series (для стандартов, например "Інформація та документація")
+        # Series (для стандартів, наприклад "Інформація та документація")
         series = entry.get('series', '')
         if series:
             parts.append(f"({series})")
@@ -1516,35 +1516,35 @@ class BibTeXToDSTUConverter:
         return self._finalize_entry(parts)
 
     def _format_inbook(self, entry: Dict) -> str:
-        """Форматирует часть книги согласно Д.13.1 DSTU 8302:2015"""
+        """Форматує частину книги згідно з Д.13.1 DSTU 8302:2015"""
         parts = []
         is_english = self._is_english(entry)
 
-        # Автор главы
+        # Автор глави
         author = entry.get('author', '')
         if author:
             formatted_author, _ = self._format_authors(author)
             parts.append(formatted_author)
 
-        # Название главы
+        # Назва глави
         title = self._clean_text(entry.get('title', ''))
         if title:
             title = title.replace('{', '').replace('}', '')
             parts.append(title)
 
-        # Название книги
+        # Назва книги
         booktitle = entry.get('booktitle', '')
         if booktitle:
             booktitle = self._clean_text(booktitle)
-            # Обработка редакторов и note
+            # Обробка редакторів і note
             editor = entry.get('editor', '')
             note = entry.get('note', '')
 
-            # Просто добавляем booktitle
+            # Просто додаємо booktitle
             parts.append(booktitle)
 
             if editor:
-                # Используем инвертированный формат для редакторов в inbook
+                # Використовуємо інвертований формат для редакторів в inbook
                 editors = [e.strip() for e in editor.split(' and ')]
                 editors = [e for e in editors if e.lower() != 'others']
                 formatted_editors = [self._format_author_inverted(e) for e in editors]
@@ -1556,7 +1556,7 @@ class BibTeXToDSTUConverter:
 
                 parts.append(f"/ {etype} {formatted_editor}")
 
-        # Издательская информация
+        # Видавнича інформація
         address = entry.get('address', '')
         publisher = entry.get('publisher', '')
         year = entry.get('year', '')
@@ -1573,7 +1573,7 @@ class BibTeXToDSTUConverter:
         if pub_parts:
             parts.append(''.join(pub_parts).replace(' ,', ','))
 
-        # Страницы
+        # Сторінки
         pages = entry.get('pages', '')
         if pages:
             pages = pages.replace('--', '–').replace('-', '–')
@@ -1595,26 +1595,26 @@ class BibTeXToDSTUConverter:
         return self._finalize_entry(parts)
 
     def _format_incollection(self, entry: Dict) -> str:
-        """Форматирует часть сборника"""
+        """Форматує частину збірника"""
         return self._format_inbook(entry)
 
     def _format_generic(self, entry: Dict) -> str:
-        """Общий формат для неизвестных типов"""
+        """Загальний формат для невідомих типів"""
         parts = []
 
-        # Авторы
+        # Автори
         authors = entry.get('author', '')
         if authors:
             formatted_authors, _ = self._format_authors(authors)
             parts.append(formatted_authors)
 
-        # Название
+        # Назва
         title = self._clean_text(entry.get('title', ''))
         if title:
             title = title.replace('{', '').replace('}', '')
             parts.append(title)
 
-        # Год
+        # Рік
         year = entry.get('year', '')
         if year:
             parts.append(year)
@@ -1632,23 +1632,23 @@ class BibTeXToDSTUConverter:
         return self._finalize_entry(parts)
 
     def _is_english(self, entry: Dict) -> bool:
-        """Определяет, является ли запись англоязычной"""
+        """Визначає, чи є запис англомовним"""
         author = entry.get('author', '')
         title = entry.get('title', '')
         journal = entry.get('journal', '')
 
         cyrillic_pattern = re.compile('[а-яА-ЯіїєґІЇЄҐ]')
 
-        # Подсчитываем кириллические символы
+        # Підраховуємо кириличні символи
         all_text = f"{author} {title} {journal}"
         cyrillic_count = len(cyrillic_pattern.findall(all_text))
         total_letters = len(re.findall(r'[a-zA-Zа-яА-ЯіїєґІЇЄҐ]', all_text))
 
-        # Если кириллических букв меньше 10% от общего числа, считаем англоязычной
+        # Якщо кириличних букв менше 10% від загальної кількості, вважаємо англомовною
         if total_letters > 0 and cyrillic_count / total_letters < 0.1:
             return True
 
-        # Если нет кириллических символов вообще
+        # Якщо немає кириличних символів взагалі
         if cyrillic_count == 0:
             return True
 
@@ -1656,7 +1656,7 @@ class BibTeXToDSTUConverter:
 
 
     def _clean_text(self, text: str) -> str:
-        """Очищает текст от специальных символов LaTeX и лишних пробелов"""
+        """Очищує текст від спеціальних символів LaTeX і зайвих пробілів"""
         if not text:
             return ""
 
@@ -1673,7 +1673,7 @@ class BibTeXToDSTUConverter:
         return text.strip()
 
     def _format_edition(self, edition: str, is_english: bool = False) -> str:
-        """Форматирует номер издания в зависимости от языка"""
+        """Форматує номер видання залежно від мови"""
         edition = edition.lower().replace('edition', '').strip()
 
         number_map = {
@@ -1714,7 +1714,7 @@ class BibTeXToDSTUConverter:
         return edition
 
     def _format_access_date(self, date_string: str) -> str:
-        """Форматирует дату обращения к ресурсу"""
+        """Форматує дату звернення до ресурсу"""
         if not date_string:
             return ""
 
@@ -1735,11 +1735,11 @@ class BibTeXToDSTUConverter:
         return date_string
 
     def convert_dict_to_list(self, bibtex_dict: Dict[str, Dict], selected_ids: Optional[List[str]] = None) -> List[str]:
-        """Конвертирует словарь с записями BibTeX в список отформатированных строк DSTU
+        """Конвертує словник із записами BibTeX у список відформатованих рядків DSTU
 
         Args:
-            bibtex_dict: Словарь, где ключ - ID записи, а значение - словарь полей записи
-            selected_ids: Список ID записей для конвертации. Если None, конвертирует все записи.
+            bibtex_dict: Словник, де ключ - ID записи, а значення - словник полів записи
+            selected_ids: Список ID записів для конвертації. Якщо None, конвертує всі записи.
         """
         entries = list(bibtex_dict.values())
         if selected_ids:
@@ -1747,11 +1747,11 @@ class BibTeXToDSTUConverter:
         return self.convert_entries(entries)
 
     def convert_file_to_list(self, filepath: str, selected_ids: Optional[List[str]] = None) -> List[str]:
-        """Конвертирует BibTeX файл в список отформатированных строк DSTU
+        """Конвертує BibTeX файл у список відформатованих рядків DSTU
 
         Args:
-            filepath: Путь к BibTeX файлу
-            selected_ids: Список ID записей для конвертации. Если None, конвертирует все записи.
+            filepath: Шлях до BibTeX файлу
+            selected_ids: Список ID записів для конвертації. Якщо None, конвертує всі записи.
         """
         entries = self.parse_bibtex_file(filepath).entries
         if selected_ids:
@@ -1759,11 +1759,11 @@ class BibTeXToDSTUConverter:
         return self.convert_entries(entries)
 
     def convert_string_to_list(self, bibtex_string: str, selected_ids: Optional[List[str]] = None) -> List[str]:
-        """Конвертирует строку BibTeX в список отформатированных строк DSTU
+        """Конвертує рядок BibTeX у список відформатованих рядків DSTU
 
         Args:
-            bibtex_string: Строка в формате BibTeX
-            selected_ids: Список ID записей для конвертации. Если None, конвертирует все записи.
+            bibtex_string: Рядок у форматі BibTeX
+            selected_ids: Список ID записів для конвертації. Якщо None, конвертує всі записи.
         """
         entries = self.parse_bibtex_string(bibtex_string)
         if selected_ids:
@@ -1771,29 +1771,29 @@ class BibTeXToDSTUConverter:
         return self.convert_entries(entries)
 
     def convert_file_to_string(self, filepath: str, numbered: bool = True, selected_ids: Optional[List[str]] = None) -> str:
-        """Конвертирует BibTeX файл в одну строку с библиографическим списком
+        """Конвертує BibTeX файл в один рядок з бібліографічним списком
 
         Args:
-            filepath: Путь к BibTeX файлу
-            numbered: Добавлять нумерацию к записям
-            selected_ids: Список ID записей для конвертации. Если None, конвертирует все записи.
+            filepath: Шлях до BibTeX файлу
+            numbered: Додавати нумерацію до записів
+            selected_ids: Список ID записів для конвертації. Якщо None, конвертує всі записи.
         """
         entries = self.convert_file_to_list(filepath, selected_ids)
         return self._format_bibliography_list(entries, numbered)
 
     def convert_string_to_formatted_string(self, bibtex_string: str, numbered: bool = True, selected_ids: Optional[List[str]] = None) -> str:
-        """Конвертирует строку BibTeX в отформатированный библиографический список
+        """Конвертує рядок BibTeX у відформатований бібліографічний список
 
         Args:
-            bibtex_string: Строка в формате BibTeX
-            numbered: Добавлять нумерацию к записям
-            selected_ids: Список ID записей для конвертации. Если None, конвертирует все записи.
+            bibtex_string: Рядок у форматі BibTeX
+            numbered: Додавати нумерацію до записів
+            selected_ids: Список ID записів для конвертації. Якщо None, конвертує всі записи.
         """
         entries = self.convert_string_to_list(bibtex_string, selected_ids)
         return self._format_bibliography_list(entries, numbered)
 
     def _format_bibliography_list(self, entries: List[str], numbered: bool = True) -> str:
-        """Форматирует список записей в единую строку"""
+        """Форматує список записів в єдиний рядок"""
         if numbered:
             formatted = []
             for i, entry in enumerate(entries, 1):
