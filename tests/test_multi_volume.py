@@ -56,7 +56,7 @@ class TestDSTU_D2_MultiVolume(unittest.TestCase):
             urldate = {2025-01-05}
         }"""
         result = self.converter.convert_string_to_list(bibtex)[0]
-        expected = "Шевченківська енциклопедія : у 6 т. / голов. ред. М. Г. Жулинський. Київ : Ін-т літератури ім. Т. Г. Шевченка, 2015. Т. 6. С. 697–699. URL: http://surl.li/nlzvlb (дата звернення: 05.01.2025)."
+        expected = "Шевченківська енциклопедія : у 6 т. / голов. ред. М. Г. Жулинський. Київ : Ін-т літератури ім. Т. Г. Шевченка, 2015. Т. 6. С. 697-699. URL: http://surl.li/nlzvlb (дата звернення: 05.01.2025)."
         self.assertEqual(result, expected)
 
     def test_d2_punkt_4(self):

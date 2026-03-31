@@ -19,7 +19,7 @@ class TestDSTU_D13_3_Articles(unittest.TestCase):
             pages = {88--92}
         }"""
         result = self.converter.convert_string_to_list(bibtex)[0]
-        expected = "Кучеренко О. О. Конституційні права людини і громадянина. Часопис Київського університету права. 2007. № 4. С. 88–92."
+        expected = "Кучеренко О. О. Конституційні права людини і громадянина. Часопис Київського університету права. 2007. № 4. С. 88-92."
         self.assertEqual(result, expected)
 
     def test_d13_3_punkt_2(self):
@@ -33,7 +33,7 @@ class TestDSTU_D13_3_Articles(unittest.TestCase):
             pages = {48--55}
         }"""
         result = self.converter.convert_string_to_list(bibtex)[0]
-        expected = "Загірняк М., Костенко А. Про користування можливостями міжнародної бази даних Scopus. Вища школа. 2017. № 5–6. С. 48–55."
+        expected = "Загірняк М., Костенко А. Про користування можливостями міжнародної бази даних Scopus. Вища школа. 2017. № 5-6. С. 48-55."
         self.assertEqual(result, expected)
 
     def test_d13_3_punkt_3(self):
@@ -63,7 +63,7 @@ class TestDSTU_D13_3_Articles(unittest.TestCase):
             pages = {109--118}
         }"""
         result = self.converter.convert_string_to_list(bibtex)[0]
-        expected = "Bletskan D. I., Glukhov K. E., Frolova V. V. Electronic structure of 2H-SnSe2. Semiconductor Physics Quantum Electronics & Optoelectronics. 2017. Vol. 18, No 2. P. 109–118."
+        expected = "Bletskan D. I., Glukhov K. E., Frolova V. V. Electronic structure of 2H-SnSe2. Semiconductor Physics Quantum Electronics & Optoelectronics. 2017. Vol. 18, No 2. P. 109-118."
         self.assertEqual(result, expected)
 
     def test_d13_3_punkt_5(self):
@@ -79,7 +79,7 @@ class TestDSTU_D13_3_Articles(unittest.TestCase):
             urldate = {2022-11-03}
         }"""
         result = self.converter.convert_string_to_list(bibtex)[0]
-        expected = "Zadereyko О., Trofymenko O., Prokop Y., Loginova N., Dyka A., Kukharenko S. Research of potential data leaks in information and communication systems / Radio electronic and Computer Systems. 2022. No 4. P. 64–84. DOI: https://doi.org/10.32620/reks.2022.4.05 (дата звернення: 03.11.2022)."
+        expected = "Zadereyko О., Trofymenko O., Prokop Y., Loginova N., Dyka A., Kukharenko S. Research of potential data leaks in information and communication systems / Radio electronic and Computer Systems. 2022. No 4. P. 64-84. DOI: https://doi.org/10.32620/reks.2022.4.05 (дата звернення: 03.11.2022)."
         self.assertEqual(result, expected)
 
     def test_d13_3_punkt_6(self):
@@ -95,7 +95,7 @@ class TestDSTU_D13_3_Articles(unittest.TestCase):
             urldate = {2024-10-03}
         }"""
         result = self.converter.convert_string_to_list(bibtex)[0]
-        expected = "Трофименко О. Г., Дика А. І., Логінова Н. І., Задерейко О. В., Струк Н. О. Штучний інтелект у військових навчальних симуляторах. Інформаційні технології та суспільство. 2024. № 2(13). C. 89–95. maup.it.2024.2.13 (дата звернення: 03.10.2024). DOI: https://doi.org/10.32689/"
+        expected = "Трофименко О. Г., Дика А. І., Логінова Н. І., Задерейко О. В., Струк Н. О. Штучний інтелект у військових навчальних симуляторах. Інформаційні технології та суспільство. 2024. № 2(13). C. 89-95. maup.it.2024.2.13 (дата звернення: 03.10.2024). DOI: https://doi.org/10.32689/"
         self.assertEqual(result, expected)
 
     def test_d13_3_punkt_7(self):
@@ -111,7 +111,7 @@ class TestDSTU_D13_3_Articles(unittest.TestCase):
             urldate = {2022-11-03}
         }"""
         result = self.converter.convert_string_to_list(bibtex)[0]
-        expected = "Research of potential data leaks in information and communication systems / O. Zadereyko, O. Trofymenko, Y. Prokop, N. Loginova, A.Dyka, S. Kukharenko. Radio electronic and Computer Systems. 2022. No 4. P. 64–84. DOI: https://doi.org/10.32620/reks.2022.4.05 (дата звернення: 03.11.2022)."
+        expected = "Research of potential data leaks in information and communication systems / O. Zadereyko, O. Trofymenko, Y. Prokop, N. Loginova, A.Dyka, S. Kukharenko. Radio electronic and Computer Systems. 2022. No 4. P. 64-84. DOI: https://doi.org/10.32620/reks.2022.4.05 (дата звернення: 03.11.2022)."
         self.assertEqual(result, expected)
 
     def test_d13_3_punkt_8(self):
@@ -127,5 +127,5 @@ class TestDSTU_D13_3_Articles(unittest.TestCase):
             urldate = {2024-10-03}
         }"""
         result = self.converter.convert_string_to_list(bibtex)[0]
-        expected = "Штучний інтелект у військових навчальних симуляторах / O. Г. Трофименко, А. І. Дика, Н. І. Логінова, О. В. Задерейко, Н. О. Струк. Інформаційні технології та суспільство. 2024. № 2(13). C. 89–95. DOI: https://doi.org/10.32689/maup.it.2024.2.13 (дата звернення: 03.10.2024)."
+        expected = "Штучний інтелект у військових навчальних симуляторах / O. Г. Трофименко, А. І. Дика, Н. І. Логінова, О. В. Задерейко, Н. О. Струк. Інформаційні технології та суспільство. 2024. № 2(13). C. 89-95. DOI: https://doi.org/10.32689/maup.it.2024.2.13 (дата звернення: 03.10.2024)."
         self.assertEqual(result, expected)

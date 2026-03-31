@@ -36,7 +36,7 @@ class TestDSTU_D13_2_ReferencePart(unittest.TestCase):
             pages = {54--55}
         }"""
         result = self.converter.convert_string_to_list(bibtex)[0]
-        expected = "Дичківська І. М. Інноваційні педагогічні технології. Основи педагогіки освіти : словник термінів / ред. Т. О. Дмитрук. Київ, 2014. С. 54–55."
+        expected = "Дичківська І. М. Інноваційні педагогічні технології. Основи педагогіки освіти : словник термінів / ред. Т. О. Дмитрук. Київ, 2014. С. 54-55."
         self.assertEqual(result, expected)
 
     def test_d13_2_punkt_3(self):
