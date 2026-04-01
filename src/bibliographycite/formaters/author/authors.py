@@ -1,6 +1,6 @@
-from bibliographycite.formaters.author.author_inverted import format_author_inverted
-from bibliographycite.formaters.author.single_author import format_single_author
-from bibliographycite.utils.is_english import is_english
+from .author_inverted import format_author_inverted
+from .single_author import format_single_author
+from ...utils.is_english import is_english
 
 
 def format_authors(authors_string: str, max_authors: int = 3, inverted: bool = False, force_all: bool = False) -> \

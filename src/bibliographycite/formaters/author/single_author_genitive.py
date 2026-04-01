@@ -1,5 +1,5 @@
-from bibliographycite.formaters.author.utils.split_author_no_comma import split_author_no_comma
-from bibliographycite.formaters.author.utils.to_genitive import to_genitive
+from .utils.split_author_no_comma import split_author_no_comma
+from .utils.to_genitive import to_genitive
 
 
 def format_single_author_genitive(author: str) -> str:

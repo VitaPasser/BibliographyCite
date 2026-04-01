@@ -1,7 +1,7 @@
 from typing import Dict
 
-from bibliographycite.formaters.editor.normalize_editor_type import normalize_editor_type
-from bibliographycite.formaters.editor.get_editor_type import get_editor_type
+from .normalize_editor_type import normalize_editor_type
+from .get_editor_type import get_editor_type
 
 
 def get_per_editor_types(entry: Dict) -> list:

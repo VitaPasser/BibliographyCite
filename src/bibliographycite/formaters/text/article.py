@@ -1,12 +1,12 @@
 from typing import Dict
 
-from bibliographycite.formaters.author.author_inverted import format_author_inverted
-from bibliographycite.formaters.author.authors import format_authors
-from bibliographycite.formaters.author.single_author import format_single_author
-from bibliographycite.formaters.text.utils.access_date import format_access_date
-from bibliographycite.formaters.text.utils.clean_text import clean_text
-from bibliographycite.utils.finalize_entry import finalize_entry
-from bibliographycite.utils.is_english import is_english
+from ..author.author_inverted import format_author_inverted
+from ..author.authors import format_authors
+from ..author.single_author import format_single_author
+from ..text.utils.access_date import format_access_date
+from ..text.utils.clean_text import clean_text
+from ...utils.finalize_entry import finalize_entry
+from ...utils.is_english import is_english
 
 
 def format_article(entry: Dict) -> str:

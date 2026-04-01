@@ -1,4 +1,4 @@
-from bibliographycite.formaters.author.utils.split_author_no_comma import split_author_no_comma
+from .utils.split_author_no_comma import split_author_no_comma
 
 
 def format_author_inverted(author: str) -> str:
