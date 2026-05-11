@@ -1,18 +1,18 @@
 from typing import Dict
 
-from bibliographycite.formaters.author.author_inverted import format_author_inverted, format_author_inverted_fullname
-from bibliographycite.formaters.author.single_author import format_single_author
-from bibliographycite.formaters.author.single_author_genitive import format_single_author_genitive
-from bibliographycite.formaters.editor.handle_editors_no_author import handle_editors_no_author
-from bibliographycite.formaters.editor.get_editor_type import get_editor_type
-from bibliographycite.formaters.editor.handle_editors_with_authors import handle_editors_with_authors
-from bibliographycite.formaters.text.edition import format_edition
-from bibliographycite.formaters.text.utils.abbreviate_publisher import abbreviate_publisher
-from bibliographycite.formaters.text.utils.access_date import format_access_date
-from bibliographycite.formaters.text.utils.clean_text import clean_text
-from bibliographycite.utils.finalize_entry import finalize_entry
-from bibliographycite.utils.is_english import is_english
-from bibliographycite.utils.is_odesa_polytech_style import is_odesa_polytech_style
+from ..author.author_inverted import format_author_inverted
+from ..author.single_author import format_single_author
+from ..author.single_author_genitive import format_single_author_genitive
+from ..editor.handle_editors_no_author import handle_editors_no_author
+from ..editor.get_editor_type import get_editor_type
+from ..editor.handle_editors_with_authors import handle_editors_with_authors
+from .edition import format_edition
+from .utils.abbreviate_publisher import abbreviate_publisher
+from .utils.access_date import format_access_date
+from .utils.clean_text import clean_text
+from ...utils.finalize_entry import finalize_entry
+from ...utils.is_english import is_english
+from ...utils.is_odesa_polytech_style import is_odesa_polytech_style
 
 
 def format_book(entry: Dict) -> str:

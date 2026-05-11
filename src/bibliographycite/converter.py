@@ -7,15 +7,15 @@ import bibtexparser
 from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bparser import BibTexParser
 
-from bibliographycite.formaters.text.article import format_article
-from bibliographycite.formaters.text.book import format_book
-from bibliographycite.formaters.text.conference import format_conference
-from bibliographycite.formaters.text.inbook import format_inbook
-from bibliographycite.formaters.text.misc import format_misc
-from bibliographycite.formaters.text.online import format_online
-from bibliographycite.formaters.text.techreport import format_techreport
-from bibliographycite.formaters.text.thesis import format_thesis
-from bibliographycite.utils.finalize_entry import finalize_entry
+from .formaters.text.article import format_article
+from .formaters.text.book import format_book
+from .formaters.text.conference import format_conference
+from .formaters.text.inbook import format_inbook
+from .formaters.text.misc import format_misc
+from .formaters.text.online import format_online
+from .formaters.text.techreport import format_techreport
+from .formaters.text.thesis import format_thesis
+from .utils.finalize_entry import finalize_entry
 
 
 class BibTeXToDSTUConverter:

@@ -1,10 +1,10 @@
 from typing import Dict, List
 
-from bibliographycite.extracters.compiler_from_note import extract_compiler_from_note
-from bibliographycite.formaters.author.author_inverted import format_author_inverted
-from bibliographycite.formaters.author.single_author import format_single_author
-from bibliographycite.formaters.editor.get_editor_type import get_editor_type
-from bibliographycite.formaters.editor.get_per_editor_types import get_per_editor_types
+from ...extracters.compiler_from_note import extract_compiler_from_note
+from ..author.author_inverted import format_author_inverted
+from ..author.single_author import format_single_author
+from .get_editor_type import get_editor_type
+from .get_per_editor_types import get_per_editor_types
 
 
 def handle_editors_no_author(entry: Dict, parts: List[str], note: str):

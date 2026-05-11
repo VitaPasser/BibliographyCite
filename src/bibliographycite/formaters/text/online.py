@@ -1,8 +1,8 @@
 from typing import Dict
 
-from bibliographycite.formaters.author.authors import format_authors
-from bibliographycite.formaters.text.utils.access_date import format_access_date
-from bibliographycite.formaters.text.utils.clean_text import clean_text
+from ..author.authors import format_authors
+from .utils.access_date import format_access_date
+from .utils.clean_text import clean_text
 
 
 def format_online(entry: Dict) -> str:

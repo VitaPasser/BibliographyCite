@@ -1,6 +1,6 @@
 from typing import Dict
 
-from bibliographycite.formaters.editor.normalize_editor_type import normalize_editor_type
+from .normalize_editor_type import normalize_editor_type
 
 
 def get_editor_type(entry: Dict) -> str:
