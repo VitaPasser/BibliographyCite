@@ -1,6 +1,7 @@
 from typing import Dict
 
 from ..author.author_inverted import format_author_inverted
+from ..author.author_inverted import format_author_inverted_fullname
 from ..author.single_author import format_single_author
 from ..author.single_author_genitive import format_single_author_genitive
 from ..editor.handle_editors_no_author import handle_editors_no_author
