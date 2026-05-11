@@ -1,5 +1,7 @@
 from typing import List
 
+from utils.replace_to_french_quotes import replace_to_french_quotes
+
 
 def finalize_entry(parts: List[str]) -> str:
     """Фіналізує запис, об'єднуючи частини і додаючи крапку в кінці"""
@@ -30,4 +32,5 @@ def finalize_entry(parts: List[str]) -> str:
     # Переконуємося, що результат закінчується крапкою (але не якщо закінчується слешем)
     if not result.endswith('.') and not result.endswith('/'):
         result += '.'
+    result = replace_to_french_quotes(result)
     return result
