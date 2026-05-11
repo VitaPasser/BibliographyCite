@@ -1,5 +1,8 @@
 import re
 
+from bibliographycite.utils.shorten_ukr_city import shorten_ukr_city
+
+
 def abbreviate_publisher(publisher: str) -> str:
     """Скорочує повні назви видавництв/організацій згідно з ДСТУ 3582:2013.
 
@@ -9,7 +12,6 @@ def abbreviate_publisher(publisher: str) -> str:
     """
 
     p = publisher
-    # Порядок важливий: спочатку довші збіги
     replacements = [
         (r'\bІнститут\b', 'Ін-т'),
         (r'\bінститут\b', 'ін-т'),
@@ -29,5 +31,18 @@ def abbreviate_publisher(publisher: str) -> str:
 
     for pattern, repl in replacements:
         p = re.sub(pattern, repl, p)
+        p = process_text_in_quotes(p)
 
     return p
+
+
+def process_text_in_quotes(text):
+    pattern = r'"(.*?)"'
+
+    def replace_func(match):
+        content:str = match.group(1)  # Текст внутри кавычек
+        contents = content.split(' ')
+        shortened = shorten_ukr_city(contents[0])
+        return f'"{shortened} {' '.join(contents[1:])}"'
+
+    return re.sub(pattern, replace_func, text)

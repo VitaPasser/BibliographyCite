@@ -113,3 +113,39 @@ class TestDSTU_D1_1_SingleAuthor(unittest.TestCase):
         result = self.converter.convert_string_to_list(bibtex)[0]
         expected = "Веретенко В. В. Міжнародний маркетинг : монографія / заг. наук. ред. В. М. Марценюк. Київ, 2015. 374 с."
         self.assertEqual(result, expected)
+
+    def test_style_odesa_polytech(self):
+        """Оформлення бібліографії бакалаврських і магістерських робіт Одеської політехніки"""
+        bibtex = """@book{macenko2024,
+            author = {Маценко Ібрагім Васильович},
+            title = {Оцінка та розвиток персоналу соціальної організації на засадах професійної надійності},
+            subtitle = {Кваліфікаційна робота магістра за спеціальністю "231 Соціальна робота"},
+            publisher = {Національний університет "Одеська політехніка"},
+            editor = {Пенко Алла Анатоліївна},
+            editortype = {керівник},
+            year = {2024},
+            address = {Одеса},
+            pages = {125},
+            style = {odesa_polytech}
+        }"""
+        result = self.converter.convert_string_to_list(bibtex)[0]
+        expected = "Маценко І. В. Оцінка та розвиток персоналу соціальної організації на засадах професійної надійності : кваліфікаційна робота магістра за спеціальністю \"231 Соціальна робота\" / Ібрагім Васильович Маценко ; керівник Алла Анатоліївна Пенко. - Одеса : Нац. ун-т \"Одес. політехніка\", 2024. - 125 с."
+        self.assertEqual(result, expected)
+
+    def test_style_odesa_polytech_eng(self):
+        """Оформлення бібліографії англійською мовою бакалаврських і магістерських робіт Одеської політехніки"""
+        bibtex = """@book{macenkoeng2024,
+            author = {Matsenko Ibrahim Vasyliovych},
+            title = {Evaluation and development of the staff of a social organization based on the principles of professional reliability},
+            subtitle = {Master's qualification work in the specialty "231 Social work"},
+            publisher = {Odesa Polytech. Nat. Univ.},
+            editor = {Penko Alla Anatolyivna},
+            editortype = {supervisor},
+            year = {2024},
+            address = {Odesa},
+            pages = {125},
+            style = {odesa_polytech}
+        }"""
+        result = self.converter.convert_string_to_list(bibtex)[0]
+        expected = "Matsenko I. V. Evaluation and development of the staff of a social organization based on the principles of professional reliability : master's qualification work in the specialty \"231 Social work\" / Ibrahim Vasyliovych Matsenko ; supervisor Alla Anatolyivna Penko. - Odesa : Odesa Polytech. Nat. Univ., 2024. - 125 p."
+        self.assertEqual(result, expected)

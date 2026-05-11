@@ -2,7 +2,7 @@ from bibliographycite.formaters.author.utils.split_author_no_comma import split_
 
 
 def format_single_author(author: str) -> str:
-    """Форматує одного автора: Прізвище І. О."""
+    """Форматує одного автора: Прізвище І. Б."""
     author = ' '.join(author.split())
 
     if ',' in author:

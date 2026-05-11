@@ -28,3 +28,17 @@ def format_author_inverted(author: str) -> str:
                 return f"{' '.join(initials)} {lastname}"
             return lastname
         return author
+
+
+def format_author_inverted_fullname(author: str) -> str:
+    """Форматує одного автора: Ім'я По батькові Прізвище"""
+    author = ' '.join(author.split())
+
+    if ',' in author:
+        return author
+    else:
+        parts = author.split()
+        if len(parts) >= 2:
+            lastname, firstnames = split_author_no_comma(parts)
+            return f"{' '.join(firstnames)} {lastname}"
+        return author

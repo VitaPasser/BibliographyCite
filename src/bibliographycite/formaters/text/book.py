@@ -1,6 +1,6 @@
 from typing import Dict
 
-from bibliographycite.formaters.author.author_inverted import format_author_inverted
+from bibliographycite.formaters.author.author_inverted import format_author_inverted, format_author_inverted_fullname
 from bibliographycite.formaters.author.single_author import format_single_author
 from bibliographycite.formaters.author.single_author_genitive import format_single_author_genitive
 from bibliographycite.formaters.editor.handle_editors_no_author import handle_editors_no_author
@@ -12,12 +12,14 @@ from bibliographycite.formaters.text.utils.access_date import format_access_date
 from bibliographycite.formaters.text.utils.clean_text import clean_text
 from bibliographycite.utils.finalize_entry import finalize_entry
 from bibliographycite.utils.is_english import is_english
+from bibliographycite.utils.is_odesa_polytech_style import is_odesa_polytech_style
 
 
 def format_book(entry: Dict) -> str:
     """Форматує книгу згідно з Д.1 DSTU 8302:2015"""
     parts = []
     _is_english = is_english(entry)
+    _is_odesa_polytech_style = is_odesa_polytech_style(entry)
 
     # Автори
     authors_str = entry.get('author', '')
@@ -48,6 +50,8 @@ def format_book(entry: Dict) -> str:
     # Назва + тип
     title = clean_text(entry.get('title', ''))
     subtitle = clean_text(entry.get('subtitle', ''))
+    if _is_odesa_polytech_style:
+        subtitle = (subtitle[0].lower() + subtitle[1:]) if len(subtitle) > 1 else ''
     book_type = clean_text(entry.get('type', ''))
     note = entry.get('note', '')
     volume = entry.get('volume', '')
@@ -94,6 +98,8 @@ def format_book(entry: Dict) -> str:
         formatted_authors = ', '.join([format_single_author(a) for a in authors_list])
         parts.append(formatted_authors)
         parts.append(title_full)
+        if _is_odesa_polytech_style:
+            parts.append(f"/ {', '.join([format_author_inverted_fullname(a) for a in authors_list])}")
 
     elif author_count == 4:
         # 4 автора - назва перша, потім автори в звичайному форматі Прізвище І.О.
@@ -128,9 +134,14 @@ def format_book(entry: Dict) -> str:
         elif not etype:
             etype = 'ред.'
 
-        formatted_editors = [format_author_inverted(e) for e in editors]
-        formatted_editor = ', '.join(formatted_editors)
-        parts.append(f"/ {etype} {formatted_editor}")
+        if _is_odesa_polytech_style:
+            formatted_editors = [format_author_inverted_fullname(e) for e in editors]
+            formatted_editor = ', '.join(formatted_editors)
+            parts.append(f"; {etype} {formatted_editor}")
+        else:
+            formatted_editors = [format_author_inverted(e) for e in editors]
+            formatted_editor = ', '.join(formatted_editors)
+            parts.append(f"/ {etype} {formatted_editor}")
 
     elif editor and (author_count == 4 or author_count >= 5) and not title_has_volume:
         # Обробка редакторів для 4+ авторів
@@ -183,6 +194,8 @@ def format_book(entry: Dict) -> str:
     publisher_parts = []
     address = entry.get('address', '')
     if address:
+        if _is_odesa_polytech_style:
+            publisher_parts.append('-')
         publisher_parts.append(address)
 
     publisher = entry.get('publisher', '')
@@ -230,16 +243,19 @@ def format_book(entry: Dict) -> str:
 
     if pages:
         # Для багатотомних видань з діапазоном сторінок використовується формат "С. номера"
+        delimeter = ''
+        if _is_odesa_polytech_style:
+            delimeter = '- '
         pages = pages.replace('--', '-')
         if volume and ('-' in pages or ',' in pages):
             page_prefix = "P." if _is_english else "С."
-            parts.append(f"{page_prefix} {pages}")
+            parts.append(f"{delimeter}{page_prefix} {pages}")
         else:
             page_unit = "p." if _is_english else "с."
             if '-' not in pages:
-                parts.append(f"{pages} {page_unit}")
+                parts.append(f"{delimeter}{pages} {page_unit}")
             elif pages.replace('-', '').isdigit():
-                parts.append(f"{pages} {page_unit}")
+                parts.append(f"{delimeter}{pages} {page_unit}")
 
     # URL
     url = entry.get('url', '')
