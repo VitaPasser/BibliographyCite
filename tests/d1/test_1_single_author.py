@@ -129,7 +129,7 @@ class TestDSTU_D1_1_SingleAuthor(unittest.TestCase):
             style = {odesa_polytech}
         }"""
         result = self.converter.convert_string_to_list(bibtex)[0]
-        expected = "Маценко І. В. Оцінка та розвиток персоналу соціальної організації на засадах професійної надійності : кваліфікаційна робота магістра за спеціальністю \"231 Соціальна робота\" / Ібрагім Васильович Маценко ; керівник Алла Анатоліївна Пенко. - Одеса : Нац. ун-т \"Одес. політехніка\", 2024. - 125 с."
+        expected = "Маценко І. В. Оцінка та розвиток персоналу соціальної організації на засадах професійної надійності : кваліфікаційна робота магістра за спеціальністю \"231 Соціальна робота\" / Ібрагім Васильович Маценко ; керівник Алла Анатоліївна Пенко. – Одеса : Нац. ун-т \"Одес. політехніка\", 2024. – 125 с."
         self.assertEqual(result, expected)
 
     def test_style_odesa_polytech_eng(self):
@@ -147,5 +147,5 @@ class TestDSTU_D1_1_SingleAuthor(unittest.TestCase):
             style = {odesa_polytech}
         }"""
         result = self.converter.convert_string_to_list(bibtex)[0]
-        expected = "Matsenko I. V. Evaluation and development of the staff of a social organization based on the principles of professional reliability : master's qualification work in the specialty \"231 Social work\" / Ibrahim Vasyliovych Matsenko ; supervisor Alla Anatolyivna Penko. - Odesa : Odesa Polytech. Nat. Univ., 2024. - 125 p."
+        expected = "Matsenko I. V. Evaluation and development of the staff of a social organization based on the principles of professional reliability : master's qualification work in the specialty \"231 Social work\" / Ibrahim Vasyliovych Matsenko ; supervisor Alla Anatolyivna Penko. – Odesa : Odesa Polytech. Nat. Univ., 2024. – 125 p."
         self.assertEqual(result, expected)

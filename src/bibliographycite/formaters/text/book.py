@@ -196,7 +196,7 @@ def format_book(entry: Dict) -> str:
     address = entry.get('address', '')
     if address:
         if _is_odesa_polytech_style:
-            publisher_parts.append('-')
+            publisher_parts.append('–')
         publisher_parts.append(address)
 
     publisher = entry.get('publisher', '')
@@ -246,7 +246,7 @@ def format_book(entry: Dict) -> str:
         # Для багатотомних видань з діапазоном сторінок використовується формат "С. номера"
         delimeter = ''
         if _is_odesa_polytech_style:
-            delimeter = '- '
+            delimeter = '– '
         pages = pages.replace('--', '-')
         if volume and ('-' in pages or ',' in pages):
             page_prefix = "P." if _is_english else "С."
