@@ -1,6 +1,6 @@
 from typing import List
 
-from utils.replace_to_french_quotes import replace_to_french_quotes
+from .replace_to_french_quotes import replace_to_french_quotes
 
 
 def finalize_entry(parts: List[str]) -> str:
