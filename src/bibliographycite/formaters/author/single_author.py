@@ -19,6 +19,8 @@ def format_single_author(author: str) -> str:
         if initials:
             return f"{lastname} {' '.join(initials)}"
         return lastname
+    elif '_' in author:
+        return author.replace('_', ' ')
     else:
         parts = author.split()
         if len(parts) >= 2:

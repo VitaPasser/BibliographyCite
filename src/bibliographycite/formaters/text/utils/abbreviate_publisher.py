@@ -1,6 +1,6 @@
 import re
 
-from bibliographycite.utils.shorten_ukr_city import shorten_ukr_city
+from ....utils.shorten_ukr_city import shorten_ukr_city
 
 
 def abbreviate_publisher(publisher: str) -> str:

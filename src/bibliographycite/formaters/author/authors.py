@@ -35,12 +35,9 @@ tuple[str, int]:
 
     if author_count <= 3:
         return ', '.join(formatted_authors), author_count
-    elif author_count == 4:
-        if max_authors >= 4:
-            all_formatted = [format_func(a) for a in authors]
-            return ', '.join(all_formatted), author_count
-        else:
-            return formatted_authors[0] + ' та ін.', author_count
+    elif author_count == 4 and max_authors >= 4:
+        all_formatted = [format_func(a) for a in authors]
+        return ', '.join(all_formatted), author_count
     else:
         # 5+ авторів
         _is_english = is_english({'author': authors_string})
